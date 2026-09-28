@@ -102,7 +102,7 @@ export function PositionStep({
                 description={
                   <>
                     El código y la fecha de resolución se editan en{' '}
-                    <Anchor component={Link} to="/plazas" size="xs">
+                    <Anchor component={Link} to="/plazas" inherit>
                       Plazas
                     </Anchor>
                     .
