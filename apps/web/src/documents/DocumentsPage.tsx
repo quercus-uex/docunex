@@ -255,8 +255,8 @@ function DocumentRow({
 
 function UsageCell({ document }: { document: DocumentDto }) {
   const [opened, setOpened] = useState(false);
-  const { merits, idDocument } = document.usage;
-  if (merits === 0) {
+  const { merits, applications, idDocument } = document.usage;
+  if (merits === 0 && applications === 0) {
     return idDocument ? (
       <Badge variant="light" color="grape">
         DNI (perfil)
@@ -271,8 +271,14 @@ function UsageCell({ document }: { document: DocumentDto }) {
     <Popover opened={opened} onChange={setOpened} position="bottom-start" withArrow shadow="md">
       <Popover.Target>
         <Anchor component="button" type="button" size="sm" onClick={() => setOpened((o) => !o)}>
-          {merits === 1 ? '1 mérito' : `${merits} méritos`}
-          {idDocument && ' · DNI'}
+          {[
+            merits > 0 && (merits === 1 ? '1 mérito' : `${merits} méritos`),
+            applications > 0 &&
+              (applications === 1 ? '1 solicitud' : `${applications} solicitudes`),
+            idDocument && 'DNI',
+          ]
+            .filter(Boolean)
+            .join(' · ')}
         </Anchor>
       </Popover.Target>
       <Popover.Dropdown maw={420}>
@@ -297,6 +303,16 @@ function UsageList({ id, enabled }: { id: string; enabled: boolean }) {
           </Text>
         </div>
       ))}
+      {data?.applications.map((application) => (
+        <div key={application.id}>
+          <Anchor component={Link} to={`/solicitudes/${application.id}`} size="sm">
+            Solicitud {application.positionCode}
+          </Anchor>
+          <Text size="xs" c="dimmed">
+            Documento de requisitos (bloque 5)
+          </Text>
+        </div>
+      ))}
       {data?.idDocument && <Text size="sm">Copia del DNI del perfil</Text>}
     </Stack>
   );
@@ -310,15 +326,23 @@ function DeleteDocumentModal({
   onClose: () => void;
 }) {
   const remove = useDeleteDocument();
-  const inUse = (document?.usage.merits ?? 0) > 0;
+  const merits = document?.usage.merits ?? 0;
+  const applications = document?.usage.applications ?? 0;
+  const inUse = merits > 0 || applications > 0;
   return (
     <Modal opened={document !== null} onClose={onClose} title="Eliminar documento">
       <Stack>
         {inUse ? (
           <Alert color="yellow" variant="light">
-            «{document?.name}» justifica{' '}
-            {document?.usage.merits === 1 ? 'un mérito' : `${document?.usage.merits} méritos`}.
-            Quítalo de ellos antes de eliminarlo.
+            «{document?.name}» se usa en{' '}
+            {[
+              merits > 0 && (merits === 1 ? 'un mérito' : `${merits} méritos`),
+              applications > 0 &&
+                (applications === 1 ? 'una solicitud' : `${applications} solicitudes`),
+            ]
+              .filter(Boolean)
+              .join(' y ')}
+            . Quítalo de ahí antes de eliminarlo.
           </Alert>
         ) : (
           <Text>

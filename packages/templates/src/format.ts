@@ -1,3 +1,4 @@
+import { getMeritType, type MeritData, optionLabel } from '@docunex/shared';
 import type { Applicant } from './models.js';
 
 /** `2024-06-14` → `14/06/2024`. */
@@ -44,4 +45,24 @@ export function parseEmphasis(text: string): TextRun[] {
         ...(marks !== 2 && { italic: true }),
       };
     });
+}
+
+/** "JCR, Q1, Computer Science, Theory & Methods" de un artículo indexado; `null` si no lo está. */
+export function articleIndexing(data: MeritData<'article'>): string | null {
+  if (!data.indexed) return null;
+  const { fieldDefs } = getMeritType('article');
+  const index =
+    data.index === 'other' ? data.otherIndex : optionLabel(fieldDefs, 'index', data.index);
+  return (
+    [index, optionLabel(fieldDefs, 'quartile', data.quartile), data.category]
+      .filter(Boolean)
+      .join(', ') || null
+  );
+}
+
+/** Posición en la categoría: "12/143". */
+export function articleRank(data: MeritData<'article'>): string {
+  return data.rank !== null && data.categoryTotal !== null
+    ? `${data.rank}/${data.categoryTotal}`
+    : formatNumber(data.rank ?? data.categoryTotal);
 }

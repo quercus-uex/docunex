@@ -26,3 +26,32 @@ export function formatDocRanges(codes: readonly number[]): string {
     )
     .join(', ');
 }
+
+export interface AssignedDocCode {
+  documentId: string;
+  code: number;
+  /** Bloque del expediente en el que se imprime: 5 (requisitos) o 6 (méritos). */
+  block: 5 | 6;
+}
+
+/**
+ * Numera los documentos acreditativos en su orden físico en el expediente: primero los requisitos
+ * (bloque 5) y después los justificantes de cada mérito siguiendo el CV (bloque 6). Un documento que
+ * ya ha salido conserva su número y no se repite, aunque sea requisito y mérito a la vez.
+ */
+export function assignDocCodes(input: {
+  requirementDocumentIds: readonly string[];
+  /** Justificantes de cada mérito, con los méritos en el orden del CV. */
+  meritDocumentIds: readonly (readonly string[])[];
+}): AssignedDocCode[] {
+  const assigned: AssignedDocCode[] = [];
+  const seen = new Set<string>();
+  const add = (documentId: string, block: 5 | 6) => {
+    if (seen.has(documentId)) return;
+    seen.add(documentId);
+    assigned.push({ documentId, code: assigned.length + 1, block });
+  };
+  for (const id of input.requirementDocumentIds) add(id, 5);
+  for (const ids of input.meritDocumentIds) for (const id of ids) add(id, 6);
+  return assigned;
+}

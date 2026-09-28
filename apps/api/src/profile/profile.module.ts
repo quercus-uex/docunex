@@ -10,5 +10,6 @@ import { ProfileService } from './profile.service.js';
   imports: [TypeOrmModule.forFeature([Profile, DegreeVerification, Document])],
   controllers: [ProfileController],
   providers: [ProfileService],
+  exports: [ProfileService],
 })
 export class ProfileModule {}

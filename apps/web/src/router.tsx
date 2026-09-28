@@ -1,4 +1,6 @@
 import { createBrowserRouter } from 'react-router';
+import { ApplicationPage } from './applications/ApplicationPage';
+import { ApplicationsPage } from './applications/ApplicationsPage';
 import { RequireAuth } from './auth/RequireAuth';
 import { DocumentsPage } from './documents/DocumentsPage';
 import { AppLayout } from './layout/AppLayout';
@@ -7,7 +9,7 @@ import { MeritEditPage } from './merits/MeritEditPage';
 import { MeritsPage } from './merits/MeritsPage';
 import { LoginPage } from './pages/LoginPage';
 import { NotFoundPage } from './pages/NotFoundPage';
-import { PendingPage } from './pages/PendingPage';
+import { PositionsPage } from './positions/PositionsPage';
 import { ProfilePage } from './profile/ProfilePage';
 
 export const router = createBrowserRouter([
@@ -26,8 +28,9 @@ export const router = createBrowserRouter([
       { path: 'meritos', element: <MeritsPage /> },
       { path: 'meritos/nuevo', element: <MeritEditPage /> },
       { path: 'meritos/:id', element: <MeritEditPage /> },
-      { path: 'plazas', element: <PendingPage title="Plazas" milestone="H4" /> },
-      { path: 'solicitudes', element: <PendingPage title="Solicitudes" milestone="H4" /> },
+      { path: 'plazas', element: <PositionsPage /> },
+      { path: 'solicitudes', element: <ApplicationsPage /> },
+      { path: 'solicitudes/:id', element: <ApplicationPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

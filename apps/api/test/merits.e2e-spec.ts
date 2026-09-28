@@ -130,9 +130,9 @@ describe('Méritos (e2e)', () => {
     const documents = (await agent.get('/api/documents').expect(200)).body as DocumentDto[];
     const usage = Object.fromEntries(documents.map((document) => [document.name, document.usage]));
     expect(usage).toEqual({
-      Certificado: { merits: 1, idDocument: false },
-      Artículo: { merits: 0, idDocument: false },
-      'Sin uso': { merits: 0, idDocument: false },
+      Certificado: { merits: 1, applications: 0, idDocument: false },
+      Artículo: { merits: 0, applications: 0, idDocument: false },
+      'Sin uso': { merits: 0, applications: 0, idDocument: false },
     });
 
     const unused = (await agent.get('/api/documents?unused=true').expect(200))
@@ -143,6 +143,7 @@ describe('Méritos (e2e)', () => {
     expect(body).toEqual({
       merits: [expect.objectContaining({ type: 'article', cvSection: '4.c.3.b' })],
       idDocument: false,
+      applications: [],
     } satisfies DocumentUsagesDto);
   });
 

@@ -70,4 +70,6 @@ export interface DocumentUsagesDto {
   merits: Pick<MeritDto, 'id' | 'type' | 'cvSection' | 'summary'>[];
   /** Es la copia del DNI del perfil. */
   idDocument: boolean;
+  /** Solicitudes que lo llevan como documento de requisitos (bloque 5). */
+  applications: { id: string; positionCode: string }[];
 }

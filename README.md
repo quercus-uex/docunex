@@ -25,7 +25,7 @@ pnpm dev                                 # API en :3000 y web en http://localhos
 
 | Script | Qué hace |
 |--------|----------|
-| `pnpm dev` | Compila `packages/shared` y arranca en modo desarrollo la API, la web y el *watch* de `shared` |
+| `pnpm dev` | Compila `packages/shared` y `packages/templates` y arranca en modo desarrollo la API, la web y el *watch* de ambos paquetes |
 | `pnpm build` | Compila todos los paquetes |
 | `pnpm test` | Pruebas unitarias |
 | `pnpm test:e2e` | Pruebas e2e de la API (necesitan `pnpm db:up`; usan la base `docunex_test`) |

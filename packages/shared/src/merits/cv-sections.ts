@@ -259,3 +259,15 @@ export function cvSectionHeading(code: CvSectionCode): string {
   const label = section.label === 'a)' || section.label === 'b)' ? `${code})` : section.label;
   return `${label} ${section.title}`;
 }
+
+const sectionOrder = new Map(CV_SECTION_CODES.map((code, index) => [code, index]));
+
+/**
+ * Ordena los méritos como se imprimen en el CV: por apartado y, dentro de cada apartado, en el orden
+ * en que llegan (el manual de la solicitud).
+ */
+export function sortByCvSection<T extends { cvSection: CvSectionCode }>(merits: readonly T[]): T[] {
+  return [...merits].sort(
+    (a, b) => sectionOrder.get(a.cvSection)! - sectionOrder.get(b.cvSection)!,
+  );
+}

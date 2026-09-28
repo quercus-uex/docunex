@@ -25,17 +25,19 @@ import { notifyUploadResults } from '../documents/uploadNotifications';
 
 const ACCEPT = Object.keys(ACCEPTED_UPLOAD_TYPES).join(',');
 
-/** Lista ordenada de justificantes de un mérito: elegir entre los ya subidos o subir nuevos. */
+/** Lista ordenada de documentos (justificantes de un mérito o requisitos de una solicitud). */
 export function MeritDocumentsField({
   value,
   onChange,
   uploadKind,
   error,
+  emptyText = 'Sin justificantes. El mérito se puede guardar, pero no se podrá incluir en una solicitud hasta que tenga al menos uno.',
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   uploadKind: DocumentKind;
   error?: string;
+  emptyText?: string;
 }) {
   const { data: documents = [] } = useDocuments();
   const upload = useUploadDocuments();
@@ -82,8 +84,7 @@ export function MeritDocumentsField({
     <Stack gap="xs">
       {value.length === 0 ? (
         <Text size="sm" c="dimmed">
-          Sin justificantes. El mérito se puede guardar, pero no se podrá incluir en una solicitud
-          hasta que tenga al menos uno.
+          {emptyText}
         </Text>
       ) : (
         value.map((id, index) => {

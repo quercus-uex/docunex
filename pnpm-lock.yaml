@@ -124,6 +124,9 @@ importers:
       '@docunex/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      '@docunex/templates':
+        specifier: workspace:*
+        version: link:../../packages/templates
       '@nestjs/common':
         specifier: ^12.1.1
         version: 12.1.1(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -160,6 +163,9 @@ importers:
       pg-boss:
         specifier: ^12.35.0
         version: 12.35.0
+      react:
+        specifier: ^19.3.0
+        version: 19.3.0
       reflect-metadata:
         specifier: ^0.2.2
         version: 0.2.2

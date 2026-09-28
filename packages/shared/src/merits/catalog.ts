@@ -151,6 +151,11 @@ function join(...parts: (string | number | null | undefined)[]): string {
     );
 }
 
+/** Número con coma decimal, para los resúmenes: `8.12` → `8,12`. */
+function withComma(value: number): string {
+  return value.toLocaleString('es-ES', { maximumFractionDigits: 2 });
+}
+
 function yearDate(value: number | null): string | null {
   return value === null ? null : `${value}-01-01`;
 }
@@ -219,7 +224,7 @@ const academicRecord = defineMeritType('academic_record', {
     tesina: boolean('Tesina'),
   },
   sortDate: () => null,
-  summary: (d) => `${d.degree} (media ${d.averageGrade})`,
+  summary: (d) => `${d.degree} (media ${withComma(d.averageGrade)})`,
 });
 
 const doctoralStudies = defineMeritType('doctoral_studies', {
@@ -284,7 +289,7 @@ const master = defineMeritType('master', {
     credits: decimal('Créditos', { required: true, decimals: 1, max: 300 }),
   },
   sortDate: () => null,
-  summary: (d) => `${d.name} (${d.credits} créditos)`,
+  summary: (d) => `${d.name} (${withComma(d.credits)} créditos)`,
 });
 
 const teacherTraining = defineMeritType('teacher_training', {
@@ -306,7 +311,7 @@ const otherDegree = defineMeritType('other_degree', {
     ...gradeCounts(),
   },
   sortDate: () => null,
-  summary: (d) => `${d.degree} (media ${d.averageGrade})`,
+  summary: (d) => `${d.degree} (media ${withComma(d.averageGrade)})`,
 });
 
 const language = defineMeritType('language', {

@@ -5,6 +5,7 @@ import {
   CV_SECTIONS,
   cvSectionHeading,
   cvSectionPath,
+  sortByCvSection,
 } from './cv-sections.js';
 
 describe('CV_SECTIONS', () => {
@@ -37,5 +38,18 @@ describe('CV_SECTIONS', () => {
     expect(cvSectionHeading('4.c.3.a')).toBe('4.c.3.a) Con índice de referencia');
     expect(cvSectionHeading('4.f.1')).toBe('4.f1) Autonómicos');
     expect(cvSectionHeading('5')).toBe('5.- CURRICULUM PROFESIONAL');
+  });
+});
+
+describe('sortByCvSection', () => {
+  it('ordena por apartado y conserva el orden dentro de cada uno', () => {
+    const merits = [
+      { id: 'a', cvSection: '5' },
+      { id: 'b', cvSection: '4.c.3.a' },
+      { id: 'c', cvSection: '2.a' },
+      { id: 'd', cvSection: '4.c.3.a' },
+      { id: 'e', cvSection: '4.a.1' },
+    ] as const;
+    expect(sortByCvSection(merits).map((merit) => merit.id)).toEqual(['c', 'e', 'b', 'd', 'a']);
   });
 });

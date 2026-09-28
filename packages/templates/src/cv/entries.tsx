@@ -8,7 +8,7 @@ import {
 import { StyleSheet, Text, View } from '@react-pdf/renderer';
 import type { ReactNode } from 'react';
 import { Choice, type Column, DocRef, Field, Row, Table } from '../components.js';
-import { formatDate, formatNumber } from '../format.js';
+import { articleIndexing, articleRank, formatDate, formatNumber } from '../format.js';
 import type { CvEntry } from './model.js';
 
 const INDENT = 14;
@@ -233,7 +233,6 @@ function BookChapter({ data }: { data: Data<'book_chapter'> }) {
 }
 
 function Article({ data }: { data: Data<'article'> }) {
-  const index = data.index === 'other' ? data.otherIndex : option('article', 'index', data.index);
   return (
     <Entry>
       <Row>
@@ -261,19 +260,13 @@ function Article({ data }: { data: Data<'article'> }) {
           <Row>
             <Field
               label="Índice (JCR, SJR, Latindex, otros…), cuartil y categoría"
-              value={[index, option('article', 'quartile', data.quartile), data.category]
-                .filter(Boolean)
-                .join(', ')}
+              value={articleIndexing(data)}
             />
           </Row>
           <Row>
             <Field
               label="Posición y número total de revistas en la categoría"
-              value={
-                data.rank !== null && data.categoryTotal !== null
-                  ? `${data.rank}/${data.categoryTotal}`
-                  : formatNumber(data.rank ?? data.categoryTotal)
-              }
+              value={articleRank(data)}
             />
           </Row>
         </>

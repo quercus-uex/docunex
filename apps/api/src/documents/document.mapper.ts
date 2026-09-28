@@ -3,7 +3,7 @@ import type { Document } from './document.entity.js';
 
 export type DocumentUsage = DocumentDto['usage'];
 
-const NO_USAGE: DocumentUsage = { merits: 0, idDocument: false };
+const NO_USAGE: DocumentUsage = { merits: 0, applications: 0, idDocument: false };
 
 export function toDocumentDto(document: Document, usage: DocumentUsage = NO_USAGE): DocumentDto {
   return {

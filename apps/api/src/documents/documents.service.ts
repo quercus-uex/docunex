@@ -12,6 +12,7 @@ import path from 'node:path';
 import type { Readable } from 'node:stream';
 import { In, Repository } from 'typeorm';
 import { isUniqueViolation } from '../common/database-errors.js';
+import { ApplicationRequirementDocument } from '../applications/application-requirement-document.entity.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { MeritDocument } from '../merits/merit-document.entity.js';
 import { meritSummary } from '../merits/merit.mapper.js';
@@ -42,6 +43,8 @@ export class DocumentsService {
   constructor(
     @InjectRepository(Document) private readonly documents: Repository<Document>,
     @InjectRepository(MeritDocument) private readonly meritLinks: Repository<MeritDocument>,
+    @InjectRepository(ApplicationRequirementDocument)
+    private readonly requirementLinks: Repository<ApplicationRequirementDocument>,
     @InjectRepository(Profile) private readonly profiles: Repository<Profile>,
     private readonly storage: StorageService,
     private readonly jobs: JobsService,
@@ -67,6 +70,9 @@ export class DocumentsService {
           'NOT EXISTS (SELECT 1 FROM merit_documents link WHERE link.document_id = document.id)',
         )
         .andWhere(
+          'NOT EXISTS (SELECT 1 FROM application_requirement_documents link WHERE link.document_id = document.id)',
+        )
+        .andWhere(
           'NOT EXISTS (SELECT 1 FROM profiles profile WHERE profile.id_document_id = document.id)',
         );
     }
@@ -77,16 +83,21 @@ export class DocumentsService {
     return this.toDto(userId, await this.findOwned(userId, id));
   }
 
-  /** Méritos que lo usan como justificante y si es la copia del DNI del perfil. */
+  /** Méritos y solicitudes que lo usan, y si es la copia del DNI del perfil. */
   async usages(userId: string, id: string): Promise<DocumentUsagesDto> {
     await this.findOwned(userId, id);
-    const [links, idDocument] = await Promise.all([
+    const [links, idDocument, requirementLinks] = await Promise.all([
       this.meritLinks.find({
         where: { documentId: id },
         relations: { merit: true },
         order: { merit: { cvSection: 'ASC', sortDate: 'DESC' } },
       }),
       this.profiles.existsBy({ userId, idDocumentId: id }),
+      this.requirementLinks.find({
+        where: { documentId: id },
+        relations: { application: { position: true } },
+        order: { application: { createdAt: 'DESC' } },
+      }),
     ]);
     return {
       merits: links.flatMap(({ merit }) =>
@@ -102,6 +113,11 @@ export class DocumentsService {
           : [],
       ),
       idDocument,
+      applications: requirementLinks.flatMap(({ application }) =>
+        application?.position
+          ? [{ id: application.id, positionCode: application.position.code }]
+          : [],
+      ),
     };
   }
 
@@ -124,14 +140,15 @@ export class DocumentsService {
     return this.toDto(userId, await this.documents.save(document));
   }
 
-  /** Borra el documento y sus ficheros. Si lo usa algún mérito, `409` con sus usos. */
+  /** Borra el documento y sus ficheros. Si lo usa algún mérito o solicitud, `409` con sus usos. */
   async remove(userId: string, id: string): Promise<void> {
     const document = await this.findOwned(userId, id);
     const usages = await this.usages(userId, id);
-    if (usages.merits.length > 0) {
+    if (usages.merits.length > 0 || usages.applications.length > 0) {
       throw new ConflictException({
         statusCode: 409,
-        message: 'El documento justifica algún mérito: quítalo de esos méritos antes de borrarlo',
+        message:
+          'El documento está en uso en algún mérito o solicitud: quítalo de ahí antes de borrarlo',
         usages,
       });
     }
@@ -242,7 +259,7 @@ export class DocumentsService {
   ): Promise<Map<string, DocumentUsage>> {
     const ids = documents.map((document) => document.id);
     if (ids.length === 0) return new Map();
-    const [counts, profile] = await Promise.all([
+    const [counts, requirementCounts, profile] = await Promise.all([
       this.meritLinks
         .createQueryBuilder('link')
         .select('link.documentId', 'documentId')
@@ -250,13 +267,27 @@ export class DocumentsService {
         .where({ documentId: In(ids) })
         .groupBy('link.documentId')
         .getRawMany<{ documentId: string; merits: number }>(),
+      this.requirementLinks
+        .createQueryBuilder('link')
+        .select('link.documentId', 'documentId')
+        .addSelect('COUNT(*)::int', 'applications')
+        .where({ documentId: In(ids) })
+        .groupBy('link.documentId')
+        .getRawMany<{ documentId: string; applications: number }>(),
       this.profiles.findOne({ where: { userId }, select: { userId: true, idDocumentId: true } }),
     ]);
     const meritCounts = new Map(counts.map((row) => [row.documentId, row.merits]));
+    const applicationCounts = new Map(
+      requirementCounts.map((row) => [row.documentId, row.applications]),
+    );
     return new Map(
       ids.map((id) => [
         id,
-        { merits: meritCounts.get(id) ?? 0, idDocument: profile?.idDocumentId === id },
+        {
+          merits: meritCounts.get(id) ?? 0,
+          applications: applicationCounts.get(id) ?? 0,
+          idDocument: profile?.idDocumentId === id,
+        },
       ]),
     );
   }
