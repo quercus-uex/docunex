@@ -5,3 +5,6 @@ coverage/
 .env
 data/
 .DS_Store
+referencias/
+PLAN.md
+PROPUESTA.md
