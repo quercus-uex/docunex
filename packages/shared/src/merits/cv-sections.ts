@@ -47,7 +47,10 @@ export interface CvSectionDef {
    * en cada entrada (`entry`) o en ningún sitio de este nivel (`null`).
    */
   docRef: 'section' | 'entry' | null;
-  /** Notas literales que la plantilla imprime al final del apartado. */
+  /**
+   * Notas literales de la plantilla. Las que van entre paréntesis se imprimen bajo el título; las demás,
+   * en un recuadro "Nota:" al final del apartado. Marcas de énfasis: `**negrita**` y `*cursiva*`.
+   */
   notes: readonly string[];
   /** La plantilla solo prevé una entrada. */
   single: boolean;
@@ -61,7 +64,7 @@ function sections(parent: CvSectionCode | null, ...items: SectionInput[]): CvSec
 }
 
 const TRANSCRIPT_NOTE =
-  'Se acompañará a este Currículum vitae Certificación con el Expediente Académico detallado.';
+  'Se acompañará a este *Currículum vitae* **Certificación** con el Expediente Académico detallado.';
 
 export const CV_SECTIONS: readonly CvSectionDef[] = [
   ...sections(null, { code: '2', label: '2.-', title: 'CURRÍCULUM ACADÉMICO' }),
@@ -75,7 +78,7 @@ export const CV_SECTIONS: readonly CvSectionDef[] = [
       single: true,
       notes: [
         TRANSCRIPT_NOTE,
-        'Se acompañará a este Currículum vitae a) fotocopia de la papeleta con la calificación o Certificación del Centro, b) si fuera Premio Extraordinario, certificación del Centro donde quede reflejada la fecha en la que se tomó el acuerdo y c) si fuera Premio Nacional, certificado de concesión del premio.',
+        'Se acompañará a este *Currículum vitae* **a)** fotocopia de la papeleta con la calificación o Certificación del Centro, **b)** si fuera Premio Extraordinario, certificación del Centro donde quede reflejada la fecha en la que se tomó el acuerdo y **c)** si fuera Premio Nacional, certificado de concesión del premio.',
       ],
     },
     {
@@ -93,7 +96,7 @@ export const CV_SECTIONS: readonly CvSectionDef[] = [
       docRef: 'section',
       single: true,
       notes: [
-        'Se acompañará a este Currículum vitae a) fotocopia de la papeleta con la calificación o certificación de la Unidad de Doctorado, b) si fuera Premio Extraordinario, certificación de la Secretaria General donde queda reflejada la fecha en la que se tomó el acuerdo y c) si fuera Doctorado Internacional, certificación de la Comisión de Doctorado de dicha condición',
+        'Se acompañará a este *Currículum vitae* **a)** fotocopia de la papeleta con la calificación o certificación de la Unidad de Doctorado, **b)** si fuera Premio Extraordinario, certificación de la Secretaria General donde queda reflejada la fecha en la que se tomó el acuerdo y **c)** si fuera Doctorado Internacional, certificación de la Comisión de Doctorado de dicha condición',
       ],
     },
     {
@@ -143,7 +146,7 @@ export const CV_SECTIONS: readonly CvSectionDef[] = [
       title: 'Estancias subvencionadas',
       docRef: 'section',
       notes: [
-        'Se acompañará a este Currículum vitae fotocopia de las credenciales de becario, especificando el periodo de disfrute de cada beca y la entidad financiadora. Para las estancias Centros de Investigación diferentes al de adscripción de la beca, certificación de permanencia (período) , emitida por el responsable del Centro de acogida.',
+        'Se acompañará a este *Currículum vitae* fotocopia de las **credenciales de becario**, especificando el periodo de disfrute de cada beca y la entidad financiadora. Para las estancias Centros de Investigación diferentes al de adscripción de la beca, **certificación de permanencia** (período) , emitida por el responsable del Centro de acogida.',
       ],
     },
     { code: '4.c', label: '4.c)', title: 'Publicaciones' },

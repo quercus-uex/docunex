@@ -249,6 +249,13 @@ export function isVisible(def: FieldDef, values: Record<string, unknown>): boole
   return !def.when || values[def.when.field] === def.when.equals;
 }
 
+/** Etiqueta de la opción elegida en un campo `select` (o el propio valor si no es una opción). */
+export function optionLabel(defs: FieldDefs, field: string, value: string | null): string {
+  if (value === null) return '';
+  const def = defs[field];
+  return (def?.kind === 'select' && def.options.find((o) => o.value === value)?.label) || value;
+}
+
 /**
  * Esquema de un objeto con estos campos. Los campos ocultos por su condición se guardan como
  * `null`; los visibles y obligatorios deben tener valor.

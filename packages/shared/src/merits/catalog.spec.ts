@@ -3,7 +3,7 @@ import { meritInputSchema } from './api.js';
 import { getMeritType, MERIT_CATALOG, MERIT_TYPES, type MeritType } from './catalog.js';
 import { CV_LEAF_SECTIONS } from './cv-sections.js';
 import { MERIT_EXAMPLES } from './examples.js';
-import { emptyFormValues, monthsBetween, toFormValues } from './fields.js';
+import { emptyFormValues, monthsBetween, optionLabel, toFormValues } from './fields.js';
 
 function parse(type: MeritType, data: Record<string, unknown>) {
   return getMeritType(type).schema.safeParse(data);
@@ -100,6 +100,13 @@ describe('campos', () => {
   it('las casillas no marcadas son false', () => {
     const { tesina: _tesina, ...rest } = example('academic_record');
     expect(parse('academic_record', rest).data).toMatchObject({ tesina: false });
+  });
+
+  it('da la etiqueta de la opción elegida en un select', () => {
+    const { fieldDefs } = getMeritType('article');
+    expect(optionLabel(fieldDefs, 'quartile', 'not_included')).toBe('No incluido');
+    expect(optionLabel(fieldDefs, 'quartile', null)).toBe('');
+    expect(optionLabel(fieldDefs, 'title', 'Texto libre')).toBe('Texto libre');
   });
 });
 

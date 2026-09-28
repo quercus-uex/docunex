@@ -31,6 +31,7 @@ pnpm dev                                 # API en :3000 y web en http://localhos
 | `pnpm test:e2e` | Pruebas e2e de la API (necesitan `pnpm db:up`; usan la base `docunex_test`) |
 | `pnpm typecheck` | Comprobación de tipos |
 | `pnpm lint` / `pnpm format` | oxlint / Prettier |
+| `pnpm templates:preview` | Genera en `packages/templates/preview/` los PDF de ejemplo de las plantillas, para compararlos con `referencias/` |
 | `pnpm db:up` / `pnpm db:down` | Arranca / para PostgreSQL |
 
 ## Estructura
@@ -39,5 +40,6 @@ pnpm dev                                 # API en :3000 y web en http://localhos
 apps/api          API NestJS + TypeORM + pg-boss
 apps/web          SPA React + Vite + Mantine
 packages/shared   esquemas Zod y tipos compartidos entre API y web
+packages/templates plantillas PDF (Anexo III, CV, hoja índice, separadores) con @react-pdf/renderer
 referencias/      documentación oficial de la convocatoria
 ```

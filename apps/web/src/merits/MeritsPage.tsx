@@ -22,12 +22,16 @@ import {
   Title,
   Tooltip,
 } from '@mantine/core';
-import { IconEdit, IconPlus, IconSearch, IconTrash } from '@tabler/icons-react';
-import { useState } from 'react';
+import { IconEdit, IconEye, IconPlus, IconSearch, IconTrash } from '@tabler/icons-react';
+import { lazy, useState } from 'react';
 import { Link } from 'react-router';
+import { PreviewDrawer } from '../previews/PreviewDrawer';
+import { useProfile } from '../profile/api';
 import { useMerits } from './api';
 import { DeleteMeritModal } from './DeleteMeritModal';
 import { MeritTypePicker } from './MeritTypePicker';
+
+const CvPreview = lazy(() => import('../previews/CvPreview'));
 
 /** Minúsculas y sin tildes, para buscar. */
 function normalize(text: string): string {
@@ -42,6 +46,8 @@ export function MeritsPage() {
   const [search, setSearch] = useState('');
   const [picking, setPicking] = useState(false);
   const [deleting, setDeleting] = useState<MeritDto | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const { data: profile } = useProfile();
 
   const query = normalize(search.trim());
   const visible = (merits ?? []).filter(
@@ -54,9 +60,19 @@ export function MeritsPage() {
     <Stack maw={960}>
       <Group justify="space-between" align="flex-end">
         <Title order={2}>Méritos</Title>
-        <Button leftSection={<IconPlus size={16} />} onClick={() => setPicking(true)}>
-          Añadir mérito
-        </Button>
+        <Group>
+          <Button
+            variant="default"
+            leftSection={<IconEye size={16} />}
+            disabled={!merits || merits.length === 0}
+            onClick={() => setPreviewing(true)}
+          >
+            Vista previa del CV
+          </Button>
+          <Button leftSection={<IconPlus size={16} />} onClick={() => setPicking(true)}>
+            Añadir mérito
+          </Button>
+        </Group>
       </Group>
       <Text c="dimmed">
         Registra cada mérito una sola vez con sus justificantes. Se ordenan según los apartados del
@@ -94,6 +110,13 @@ export function MeritsPage() {
 
       <MeritTypePicker opened={picking} onClose={() => setPicking(false)} />
       <DeleteMeritModal merit={deleting} onClose={() => setDeleting(null)} />
+      <PreviewDrawer
+        opened={previewing}
+        onClose={() => setPreviewing(false)}
+        title="Vista previa del currículum"
+      >
+        <CvPreview merits={merits ?? []} profile={profile} />
+      </PreviewDrawer>
     </Stack>
   );
 }

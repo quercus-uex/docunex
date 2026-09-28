@@ -410,7 +410,7 @@ const QUARTILE_OPTIONS = [
   { value: 'Q2', label: 'Q2' },
   { value: 'Q3', label: 'Q3' },
   { value: 'Q4', label: 'Q4' },
-  { value: 'not_included', label: 'Sin cuartil' },
+  { value: 'not_included', label: 'No incluido' },
 ] as const;
 
 const DOI = /^10\.\d{4,9}\/\S+$/;

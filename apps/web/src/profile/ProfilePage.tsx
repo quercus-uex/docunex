@@ -27,13 +27,16 @@ import {
 } from '@mantine/core';
 import { DateInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
-import { IconPlus, IconTrash, IconUpload } from '@tabler/icons-react';
-import type { ReactNode } from 'react';
+import { IconEye, IconPlus, IconTrash, IconUpload } from '@tabler/icons-react';
+import { lazy, type ReactNode, useState } from 'react';
 import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { applyServerErrors } from '../api/validation';
 import { documentFileUrl, useDocuments, useUploadDocuments } from '../documents/api';
 import { notifyUploadResults } from '../documents/uploadNotifications';
+import { PreviewDrawer } from '../previews/PreviewDrawer';
 import { useProfile, useUpdateProfile } from './api';
+
+const AnnexPreview = lazy(() => import('../previews/AnnexPreview'));
 
 export function ProfilePage() {
   const { data: profile, isPending, error } = useProfile();
@@ -86,6 +89,7 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
     reset,
     setError,
     setValue,
+    getValues,
     formState: { errors, isDirty },
   } = useForm({
     resolver: zodResolver(profileInputSchema),
@@ -93,6 +97,8 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
   });
   const verifications = useFieldArray({ control, name: 'degreeVerifications' });
   const missing = missingProfileFields(profile);
+  // Valores del formulario al abrir la vista previa (aunque no estén guardados).
+  const [preview, setPreview] = useState<ProfileInput | null>(null);
 
   const submit = handleSubmit((input) =>
     update.mutate(input, {
@@ -113,9 +119,18 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
       <Stack maw={880}>
         <Group justify="space-between" align="flex-end">
           <Title order={2}>Perfil</Title>
-          <Button type="submit" loading={update.isPending} disabled={!isDirty}>
-            Guardar
-          </Button>
+          <Group>
+            <Button
+              variant="default"
+              leftSection={<IconEye size={16} />}
+              onClick={() => setPreview(getValues())}
+            >
+              Vista previa del Anexo III
+            </Button>
+            <Button type="submit" loading={update.isPending} disabled={!isDirty}>
+              Guardar
+            </Button>
+          </Group>
         </Group>
         <Text c="dimmed">
           Estos datos rellenan el Anexo III (modelo de solicitud) y la portada del currículum.
@@ -255,6 +270,13 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
           </Stack>
         </Section>
       </Stack>
+      <PreviewDrawer
+        opened={preview !== null}
+        onClose={() => setPreview(null)}
+        title="Vista previa del Anexo III"
+      >
+        {preview && <AnnexPreview values={preview} />}
+      </PreviewDrawer>
     </form>
   );
 }
