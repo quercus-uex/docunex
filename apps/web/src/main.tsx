@@ -1,7 +1,11 @@
 import '@mantine/core/styles.css';
+import '@mantine/dates/styles.css';
+import '@mantine/dropzone/styles.css';
 import '@mantine/notifications/styles.css';
+import 'dayjs/locale/es';
 
 import { MantineProvider } from '@mantine/core';
+import { DatesProvider } from '@mantine/dates';
 import { Notifications } from '@mantine/notifications';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
@@ -14,10 +18,12 @@ import { theme } from './theme';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <MantineProvider theme={theme} defaultColorScheme="auto">
-      <Notifications />
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-      </QueryClientProvider>
+      <DatesProvider settings={{ locale: 'es', firstDayOfWeek: 1 }}>
+        <Notifications />
+        <QueryClientProvider client={queryClient}>
+          <RouterProvider router={router} />
+        </QueryClientProvider>
+      </DatesProvider>
     </MantineProvider>
   </StrictMode>,
 );

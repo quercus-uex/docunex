@@ -7,7 +7,7 @@
     "emitDecoratorMetadata": true,
     "strictPropertyInitialization": false,
     "removeComments": true,
-    "types": ["node"]
+    "types": ["node", "multer"]
   },
   "include": ["src", "test", "vitest.config.ts", "vitest.config.e2e.ts"]
 }

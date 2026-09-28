@@ -1,24 +1,16 @@
-import type { INestApplication } from '@nestjs/common';
-import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import type { App } from 'supertest/types.js';
-import { DataSource } from 'typeorm';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { AppModule } from '../src/app.module.js';
-import { configureApp } from '../src/app.setup.js';
 import { UsersService } from '../src/users/users.service.js';
+import { createTestApp, type TestApp } from './support/app.js';
 
 const EMAIL = 'ana@example.com';
 const PASSWORD = 'contraseña-segura';
 
 describe('Autenticación (e2e)', () => {
-  let app: INestApplication<App>;
+  let app: TestApp;
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({ imports: [AppModule] }).compile();
-    app = configureApp(moduleRef.createNestApplication<INestApplication<App>>());
-    await app.init();
-    await app.get(DataSource).query('TRUNCATE TABLE users CASCADE');
+    app = await createTestApp();
     await app.get(UsersService).upsertWithPassword(EMAIL, PASSWORD);
   });
 
