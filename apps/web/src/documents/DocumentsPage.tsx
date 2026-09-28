@@ -1,4 +1,5 @@
 import {
+  cvSectionHeading,
   DOCUMENT_KIND_LABELS,
   DOCUMENT_KINDS,
   type DocumentDto,
@@ -11,10 +12,12 @@ import {
   Badge,
   Button,
   Center,
+  Checkbox,
   Group,
   Loader,
   Menu,
   Modal,
+  Popover,
   Select,
   Stack,
   Table,
@@ -34,8 +37,15 @@ import {
   IconTrash,
 } from '@tabler/icons-react';
 import { useState } from 'react';
+import { Link } from 'react-router';
 import { formatBytes, formatIsoDate } from '../utils/format';
-import { documentFileUrl, useDeleteDocument, useDocuments, useReprocessDocument } from './api';
+import {
+  documentFileUrl,
+  useDeleteDocument,
+  useDocuments,
+  useDocumentUsages,
+  useReprocessDocument,
+} from './api';
 import { DocumentEditModal } from './DocumentEditModal';
 import { DocumentStatusBadge } from './DocumentStatusBadge';
 import { UploadDropzone } from './UploadDropzone';
@@ -49,10 +59,19 @@ export function DocumentsPage() {
   const [search, setSearch] = useState('');
   const [q] = useDebouncedValue(search.trim(), 300);
   const [kind, setKind] = useState<DocumentKind | null>(null);
-  const { data: documents, isPending, error } = useDocuments({ q, kind: kind ?? undefined });
+  const [unused, setUnused] = useState(false);
+  const {
+    data: documents,
+    isPending,
+    error,
+  } = useDocuments({
+    q,
+    kind: kind ?? undefined,
+    unused,
+  });
   const [editing, setEditing] = useState<DocumentDto | null>(null);
   const [deleting, setDeleting] = useState<DocumentDto | null>(null);
-  const filtered = q !== '' || kind !== null;
+  const filtered = q !== '' || kind !== null || unused;
 
   return (
     <Stack>
@@ -87,6 +106,11 @@ export function DocumentsPage() {
           clearable
           w={240}
         />
+        <Checkbox
+          label="Solo sin uso"
+          checked={unused}
+          onChange={(event) => setUnused(event.currentTarget.checked)}
+        />
       </Group>
 
       {error && (
@@ -99,13 +123,14 @@ export function DocumentsPage() {
           <Loader />
         </Center>
       ) : documents && documents.length > 0 ? (
-        <Table.ScrollContainer minWidth={760}>
+        <Table.ScrollContainer minWidth={860}>
           <Table highlightOnHover verticalSpacing="sm">
             <Table.Thead>
               <Table.Tr>
                 <Table.Th>Nombre</Table.Th>
                 <Table.Th>Tipo</Table.Th>
                 <Table.Th>Estado</Table.Th>
+                <Table.Th>Uso</Table.Th>
                 <Table.Th ta="right">Páginas</Table.Th>
                 <Table.Th ta="right">Tamaño</Table.Th>
                 <Table.Th>Emisión</Table.Th>
@@ -175,6 +200,9 @@ function DocumentRow({
       <Table.Td>
         <DocumentStatusBadge document={document} />
       </Table.Td>
+      <Table.Td>
+        <UsageCell document={document} />
+      </Table.Td>
       <Table.Td ta="right">{document.pageCount ?? '—'}</Table.Td>
       <Table.Td ta="right">{formatBytes(document.pdfSize ?? document.originalSize)}</Table.Td>
       <Table.Td>{formatIsoDate(document.issuedAt)}</Table.Td>
@@ -225,6 +253,55 @@ function DocumentRow({
   );
 }
 
+function UsageCell({ document }: { document: DocumentDto }) {
+  const [opened, setOpened] = useState(false);
+  const { merits, idDocument } = document.usage;
+  if (merits === 0) {
+    return idDocument ? (
+      <Badge variant="light" color="grape">
+        DNI (perfil)
+      </Badge>
+    ) : (
+      <Text size="sm" c="dimmed">
+        Sin uso
+      </Text>
+    );
+  }
+  return (
+    <Popover opened={opened} onChange={setOpened} position="bottom-start" withArrow shadow="md">
+      <Popover.Target>
+        <Anchor component="button" type="button" size="sm" onClick={() => setOpened((o) => !o)}>
+          {merits === 1 ? '1 mérito' : `${merits} méritos`}
+          {idDocument && ' · DNI'}
+        </Anchor>
+      </Popover.Target>
+      <Popover.Dropdown maw={420}>
+        <UsageList id={document.id} enabled={opened} />
+      </Popover.Dropdown>
+    </Popover>
+  );
+}
+
+function UsageList({ id, enabled }: { id: string; enabled: boolean }) {
+  const { data, isPending } = useDocumentUsages(id, enabled);
+  if (isPending) return <Loader size="sm" />;
+  return (
+    <Stack gap={6}>
+      {data?.merits.map((merit) => (
+        <div key={merit.id}>
+          <Anchor component={Link} to={`/meritos/${merit.id}`} size="sm">
+            {merit.summary}
+          </Anchor>
+          <Text size="xs" c="dimmed">
+            {cvSectionHeading(merit.cvSection)}
+          </Text>
+        </div>
+      ))}
+      {data?.idDocument && <Text size="sm">Copia del DNI del perfil</Text>}
+    </Stack>
+  );
+}
+
 function DeleteDocumentModal({
   document,
   onClose,
@@ -233,13 +310,23 @@ function DeleteDocumentModal({
   onClose: () => void;
 }) {
   const remove = useDeleteDocument();
+  const inUse = (document?.usage.merits ?? 0) > 0;
   return (
     <Modal opened={document !== null} onClose={onClose} title="Eliminar documento">
       <Stack>
-        <Text>
-          ¿Seguro que quieres eliminar «{document?.name}»? Se borrarán el fichero original y su
-          versión PDF.
-        </Text>
+        {inUse ? (
+          <Alert color="yellow" variant="light">
+            «{document?.name}» justifica{' '}
+            {document?.usage.merits === 1 ? 'un mérito' : `${document?.usage.merits} méritos`}.
+            Quítalo de ellos antes de eliminarlo.
+          </Alert>
+        ) : (
+          <Text>
+            ¿Seguro que quieres eliminar «{document?.name}»? Se borrarán el fichero original y su
+            versión PDF.
+            {document?.usage.idDocument && ' Es la copia del DNI de tu perfil: se quitará de él.'}
+          </Text>
+        )}
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
             Cancelar
@@ -247,6 +334,7 @@ function DeleteDocumentModal({
           <Button
             color="red"
             loading={remove.isPending}
+            disabled={inUse}
             onClick={() =>
               document &&
               remove.mutate(document.id, {

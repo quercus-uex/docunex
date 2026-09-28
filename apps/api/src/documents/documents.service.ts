@@ -1,19 +1,28 @@
-import type { DocumentKind, DocumentDto, UpdateDocumentInput, UploadResult } from '@docunex/shared';
+import type {
+  DocumentDto,
+  DocumentKind,
+  DocumentUsagesDto,
+  UpdateDocumentInput,
+  UploadResult,
+} from '@docunex/shared';
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import type { Readable } from 'node:stream';
-import { type FindOptionsWhere, ILike, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { isUniqueViolation } from '../common/database-errors.js';
 import { JobsService } from '../jobs/jobs.service.js';
+import { MeritDocument } from '../merits/merit-document.entity.js';
+import { meritSummary } from '../merits/merit.mapper.js';
+import { Profile } from '../profile/profile.entity.js';
 import { StorageService } from '../storage/storage.service.js';
 import {
   NORMALIZE_DOCUMENT_QUEUE,
   type NormalizeDocumentJob,
 } from './document-processor.service.js';
 import { Document } from './document.entity.js';
-import { toDocumentDto } from './document.mapper.js';
+import { type DocumentUsage, toDocumentDto } from './document.mapper.js';
 import { detectFileType } from './normalize.js';
 
 export interface UploadedFile {
@@ -32,27 +41,68 @@ export interface DocumentFile {
 export class DocumentsService {
   constructor(
     @InjectRepository(Document) private readonly documents: Repository<Document>,
+    @InjectRepository(MeritDocument) private readonly meritLinks: Repository<MeritDocument>,
+    @InjectRepository(Profile) private readonly profiles: Repository<Profile>,
     private readonly storage: StorageService,
     private readonly jobs: JobsService,
   ) {}
 
-  async list(userId: string, filters: { kind?: DocumentKind; q?: string }): Promise<DocumentDto[]> {
-    const base: FindOptionsWhere<Document> = {
-      userId,
-      ...(filters.kind && { kind: filters.kind }),
-    };
-    const where = filters.q
-      ? [
-          { ...base, name: ILike(`%${escapeLike(filters.q)}%`) },
-          { ...base, originalFilename: ILike(`%${escapeLike(filters.q)}%`) },
-        ]
-      : base;
-    const documents = await this.documents.find({ where, order: { createdAt: 'DESC' } });
-    return documents.map(toDocumentDto);
+  async list(
+    userId: string,
+    filters: { kind?: DocumentKind; q?: string; unused?: boolean },
+  ): Promise<DocumentDto[]> {
+    const query = this.documents
+      .createQueryBuilder('document')
+      .where('document.userId = :userId', { userId })
+      .orderBy('document.createdAt', 'DESC');
+    if (filters.kind) query.andWhere('document.kind = :kind', { kind: filters.kind });
+    if (filters.q) {
+      query.andWhere('(document.name ILIKE :q OR document.originalFilename ILIKE :q)', {
+        q: `%${escapeLike(filters.q)}%`,
+      });
+    }
+    if (filters.unused) {
+      query
+        .andWhere(
+          'NOT EXISTS (SELECT 1 FROM merit_documents link WHERE link.document_id = document.id)',
+        )
+        .andWhere(
+          'NOT EXISTS (SELECT 1 FROM profiles profile WHERE profile.id_document_id = document.id)',
+        );
+    }
+    return this.toDtos(userId, await query.getMany());
   }
 
   async get(userId: string, id: string): Promise<DocumentDto> {
-    return toDocumentDto(await this.findOwned(userId, id));
+    return this.toDto(userId, await this.findOwned(userId, id));
+  }
+
+  /** Méritos que lo usan como justificante y si es la copia del DNI del perfil. */
+  async usages(userId: string, id: string): Promise<DocumentUsagesDto> {
+    await this.findOwned(userId, id);
+    const [links, idDocument] = await Promise.all([
+      this.meritLinks.find({
+        where: { documentId: id },
+        relations: { merit: true },
+        order: { merit: { cvSection: 'ASC', sortDate: 'DESC' } },
+      }),
+      this.profiles.existsBy({ userId, idDocumentId: id }),
+    ]);
+    return {
+      merits: links.flatMap(({ merit }) =>
+        merit
+          ? [
+              {
+                id: merit.id,
+                type: merit.type,
+                cvSection: merit.cvSection,
+                summary: meritSummary(merit),
+              },
+            ]
+          : [],
+      ),
+      idDocument,
+    };
   }
 
   /** Guarda cada fichero y encola su normalización. Un fichero rechazado no impide los demás. */
@@ -71,11 +121,20 @@ export class DocumentsService {
   async update(userId: string, id: string, input: UpdateDocumentInput): Promise<DocumentDto> {
     const document = await this.findOwned(userId, id);
     Object.assign(document, input);
-    return toDocumentDto(await this.documents.save(document));
+    return this.toDto(userId, await this.documents.save(document));
   }
 
+  /** Borra el documento y sus ficheros. Si lo usa algún mérito, `409` con sus usos. */
   async remove(userId: string, id: string): Promise<void> {
     const document = await this.findOwned(userId, id);
+    const usages = await this.usages(userId, id);
+    if (usages.merits.length > 0) {
+      throw new ConflictException({
+        statusCode: 409,
+        message: 'El documento justifica algún mérito: quítalo de esos méritos antes de borrarlo',
+        usages,
+      });
+    }
     await this.documents.delete(document.id);
     await this.storage.delete(document.originalKey);
     if (document.pdfKey) await this.storage.delete(document.pdfKey);
@@ -90,7 +149,7 @@ export class DocumentsService {
     document.errorMessage = null;
     await this.documents.save(document);
     await this.jobs.send<NormalizeDocumentJob>(NORMALIZE_DOCUMENT_QUEUE, { documentId: id });
-    return toDocumentDto(document);
+    return this.toDto(userId, document);
   }
 
   async openFile(userId: string, id: string, variant: 'original' | 'pdf'): Promise<DocumentFile> {
@@ -123,7 +182,9 @@ export class DocumentsService {
 
     const sha256 = createHash('sha256').update(file.buffer).digest('hex');
     const existing = await this.documents.findOneBy({ userId, sha256 });
-    if (existing) return { filename, status: 'duplicate', document: toDocumentDto(existing) };
+    if (existing) {
+      return { filename, status: 'duplicate', document: await this.toDto(userId, existing) };
+    }
 
     const originalKey = `${userId}/originals/${sha256}.${type.extension}`;
     await this.storage.put(originalKey, file.buffer);
@@ -153,7 +214,9 @@ export class DocumentsService {
       const winner = isUniqueViolation(error)
         ? await this.documents.findOneBy({ userId, sha256 })
         : null;
-      if (winner) return { filename, status: 'duplicate', document: toDocumentDto(winner) };
+      if (winner) {
+        return { filename, status: 'duplicate', document: await this.toDto(userId, winner) };
+      }
       throw error;
     }
 
@@ -161,6 +224,41 @@ export class DocumentsService {
       documentId: document.id,
     });
     return { filename, status: 'created', document: toDocumentDto(document) };
+  }
+
+  private async toDto(userId: string, document: Document): Promise<DocumentDto> {
+    const [dto] = await this.toDtos(userId, [document]);
+    return dto!;
+  }
+
+  private async toDtos(userId: string, documents: Document[]): Promise<DocumentDto[]> {
+    const usage = await this.usageSummaries(userId, documents);
+    return documents.map((document) => toDocumentDto(document, usage.get(document.id)));
+  }
+
+  private async usageSummaries(
+    userId: string,
+    documents: Document[],
+  ): Promise<Map<string, DocumentUsage>> {
+    const ids = documents.map((document) => document.id);
+    if (ids.length === 0) return new Map();
+    const [counts, profile] = await Promise.all([
+      this.meritLinks
+        .createQueryBuilder('link')
+        .select('link.documentId', 'documentId')
+        .addSelect('COUNT(*)::int', 'merits')
+        .where({ documentId: In(ids) })
+        .groupBy('link.documentId')
+        .getRawMany<{ documentId: string; merits: number }>(),
+      this.profiles.findOne({ where: { userId }, select: { userId: true, idDocumentId: true } }),
+    ]);
+    const meritCounts = new Map(counts.map((row) => [row.documentId, row.merits]));
+    return new Map(
+      ids.map((id) => [
+        id,
+        { merits: meritCounts.get(id) ?? 0, idDocument: profile?.idDocumentId === id },
+      ]),
+    );
   }
 
   private async findOwned(userId: string, id: string): Promise<Document> {

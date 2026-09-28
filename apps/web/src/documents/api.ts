@@ -1,10 +1,17 @@
-import type { DocumentDto, DocumentKind, UpdateDocumentInput, UploadResult } from '@docunex/shared';
+import type {
+  DocumentDto,
+  DocumentKind,
+  DocumentUsagesDto,
+  UpdateDocumentInput,
+  UploadResult,
+} from '@docunex/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../api/client';
 
 export interface DocumentFilters {
   kind?: DocumentKind;
   q?: string;
+  unused?: boolean;
 }
 
 const documentsKey = ['documents'] as const;
@@ -17,6 +24,7 @@ export function useDocuments(filters: DocumentFilters = {}) {
   const params = new URLSearchParams();
   if (filters.kind) params.set('kind', filters.kind);
   if (filters.q) params.set('q', filters.q);
+  if (filters.unused) params.set('unused', 'true');
   const query = params.size > 0 ? `?${params}` : '';
 
   return useQuery({
@@ -25,6 +33,14 @@ export function useDocuments(filters: DocumentFilters = {}) {
     // Mientras haya documentos procesándose, se consulta periódicamente su estado.
     refetchInterval: (current) =>
       current.state.data?.some((document) => document.status === 'processing') ? 1500 : false,
+  });
+}
+
+export function useDocumentUsages(id: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...documentsKey, id, 'usages'],
+    queryFn: () => api<DocumentUsagesDto>(`/documents/${id}/usages`),
+    enabled,
   });
 }
 

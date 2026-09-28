@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module.js';
 import { DocumentsModule } from './documents/documents.module.js';
 import { HealthController } from './health/health.controller.js';
 import { JobsModule } from './jobs/jobs.module.js';
+import { MeritsModule } from './merits/merits.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { StorageModule } from './storage/storage.module.js';
 import { UsersModule } from './users/users.module.js';
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module.js';
     AuthModule,
     DocumentsModule,
     ProfileModule,
+    MeritsModule,
   ],
   controllers: [HealthController],
 })

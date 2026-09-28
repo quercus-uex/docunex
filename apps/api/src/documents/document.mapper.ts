@@ -1,7 +1,11 @@
 import type { DocumentDto } from '@docunex/shared';
 import type { Document } from './document.entity.js';
 
-export function toDocumentDto(document: Document): DocumentDto {
+export type DocumentUsage = DocumentDto['usage'];
+
+const NO_USAGE: DocumentUsage = { merits: 0, idDocument: false };
+
+export function toDocumentDto(document: Document, usage: DocumentUsage = NO_USAGE): DocumentDto {
   return {
     id: document.id,
     name: document.name,
@@ -15,6 +19,7 @@ export function toDocumentDto(document: Document): DocumentDto {
     issuedAt: document.issuedAt,
     status: document.status,
     errorMessage: document.errorMessage,
+    usage,
     createdAt: document.createdAt.toISOString(),
     updatedAt: document.updatedAt.toISOString(),
   };

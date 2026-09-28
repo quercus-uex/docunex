@@ -1,7 +1,11 @@
 import type { DocumentDto } from '@docunex/shared';
 import { Badge, Loader, Tooltip } from '@mantine/core';
 
-export function DocumentStatusBadge({ document }: { document: DocumentDto }) {
+export function DocumentStatusBadge({
+  document,
+}: {
+  document: Pick<DocumentDto, 'status' | 'errorMessage'>;
+}) {
   if (document.status === 'processing') {
     return (
       <Badge color="blue" variant="light" leftSection={<Loader size={10} color="blue" />}>

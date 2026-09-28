@@ -1,5 +1,6 @@
 import {
   type DocumentDto,
+  type DocumentUsagesDto,
   listDocumentsQuerySchema,
   MAX_UPLOAD_BYTES,
   MAX_UPLOAD_FILES,
@@ -72,6 +73,14 @@ export class DocumentsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<DocumentDto> {
     return this.documents.get(user.id, id);
+  }
+
+  @Get(':id/usages')
+  usages(
+    @CurrentUser() user: SessionUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<DocumentUsagesDto> {
+    return this.documents.usages(user.id, id);
   }
 
   @Patch(':id')

@@ -41,6 +41,8 @@ export interface DocumentDto {
   issuedAt: string | null;
   status: DocumentStatus;
   errorMessage: string | null;
+  /** Dónde se usa, resumido; el detalle está en `GET /documents/:id/usages`. */
+  usage: { merits: number; idDocument: boolean };
   createdAt: string;
   updatedAt: string;
 }
@@ -74,6 +76,8 @@ export type UpdateDocumentInput = z.input<typeof updateDocumentSchema>;
 export const listDocumentsQuerySchema = z.object({
   kind: documentKindSchema.optional(),
   q: z.string().trim().max(100).optional(),
+  /** Solo los documentos que no usa ningún mérito ni el perfil. */
+  unused: z.stringbool().optional(),
 });
 
 /** Campos del formulario multipart de `POST /documents`, además de `files`. */
