@@ -8,4 +8,5 @@ export * from './numbering.js';
 export * from './package-blocks.js';
 export * from './applications.js';
 export * from './positions.js';
+export * from './registry.js';
 export * from './validation.js';

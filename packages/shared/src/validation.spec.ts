@@ -151,5 +151,11 @@ describe('validateApplication', () => {
     );
     expect(codes(result.warnings)).toEqual(['SIZE_ESTIMATE_OVER_LIMIT']);
     expect(result.warnings[0]!.message).toContain('11,5 MB');
+    // Presupuesto: los documentos más pesados primero.
+    expect(result.largestDocuments.map((document) => [document.id, document.size])).toEqual([
+      ['escaneo', 11_000_000],
+      ['dni', 100_000],
+      ['certificacion', 100_000],
+    ]);
   });
 });

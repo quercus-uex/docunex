@@ -9,10 +9,12 @@ import { useAutoSave } from '../useAutoSave';
 /** ② Documentos justificativos de los requisitos (bloque 5). */
 export function RequirementsStep({
   application,
+  locked,
   onBack,
   onNext,
 }: {
   application: ApplicationDto;
+  locked: boolean;
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -32,10 +34,11 @@ export function RequirementsStep({
         value={documentIds}
         onChange={setDocumentIds}
         uploadKind="degree"
+        readOnly={locked}
         emptyText="Sin documentos de requisitos."
       />
       <Group justify="space-between">
-        <SaveIndicator state={state} />
+        {locked ? <span /> : <SaveIndicator state={state} />}
         <Group>
           <Button variant="default" onClick={onBack}>
             Anterior

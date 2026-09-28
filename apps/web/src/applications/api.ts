@@ -2,6 +2,7 @@ import type {
   ApplicationDto,
   PackageDto,
   PackageSummaryDto,
+  RegistryEntryInput,
   UpdateApplicationInput,
   ValidationResult,
 } from '@docunex/shared';
@@ -72,6 +73,38 @@ export function useSetRequirementDocuments(id: string) {
         method: 'PUT',
         json: { documentIds },
       }),
+    onSuccess: store,
+  });
+}
+
+/** Anota el nº de registro: la solicitud pasa a registrada. */
+export function useRegisterApplication(id: string) {
+  const store = useStoreApplication();
+  return useMutation({
+    mutationFn: (input: RegistryEntryInput) =>
+      api<ApplicationDto>(`/applications/${id}/registry-entries`, { method: 'POST', json: input }),
+    onSuccess: store,
+  });
+}
+
+export function useUpdateRegistryEntry(id: string) {
+  const store = useStoreApplication();
+  return useMutation({
+    mutationFn: ({ entryId, ...input }: RegistryEntryInput & { entryId: string }) =>
+      api<ApplicationDto>(`/applications/${id}/registry-entries/${entryId}`, {
+        method: 'PATCH',
+        json: input,
+      }),
+    onSuccess: store,
+  });
+}
+
+/** Cierra o reabre una solicitud registrada. */
+export function useSetApplicationStatus(id: string) {
+  const store = useStoreApplication();
+  return useMutation({
+    mutationFn: (status: 'registered' | 'closed') =>
+      api<ApplicationDto>(`/applications/${id}/status`, { method: 'PATCH', json: { status } }),
     onSuccess: store,
   });
 }

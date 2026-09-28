@@ -46,7 +46,12 @@ export interface ValidationResult {
   warnings: ValidationIssue[];
   /** Tamaño estimado del expediente en bytes. */
   sizeEstimate: number;
+  /** Documentos más pesados del expediente, de mayor a menor (presupuesto de tamaño). */
+  largestDocuments: { id: string; name: string; size: number }[];
 }
+
+/** Cuántos documentos se desglosan en el presupuesto de tamaño. */
+const LARGEST_DOCUMENTS = 5;
 
 /** Margen para las partes generadas (Anexo III, CV, hoja índice y separadores). */
 const GENERATED_PARTS_BYTES = 300_000;
@@ -173,9 +178,13 @@ export function validateApplication(input: ValidationInput): ValidationResult {
   if (sizeEstimate > MAX_PACKAGE_BYTES) {
     warnings.push({
       code: 'SIZE_ESTIMATE_OVER_LIMIT',
-      message: `El expediente ocupará unos ${(sizeEstimate / 1e6).toLocaleString('es-ES', { maximumFractionDigits: 1 })} MB y RedSara admite 10 MB por fichero.`,
+      message: `El expediente ocupará unos ${(sizeEstimate / 1e6).toLocaleString('es-ES', { maximumFractionDigits: 1 })} MB y RedSara admite 10 MB por fichero. Al generarlo se recomprimirán las imágenes de los documentos más pesados.`,
     });
   }
+  const largestDocuments = [...documents.values()]
+    .map((document) => ({ id: document.id, name: document.name, size: document.pdfSize ?? 0 }))
+    .sort((a, b) => b.size - a.size)
+    .slice(0, LARGEST_DOCUMENTS);
 
-  return { errors, warnings, sizeEstimate };
+  return { errors, warnings, sizeEstimate, largestDocuments };
 }

@@ -30,10 +30,12 @@ import { useAutoSave } from '../useAutoSave';
 /** ③ Méritos que se incluyen y su orden dentro de cada apartado del CV. */
 export function MeritsStep({
   application,
+  locked,
   onBack,
   onNext,
 }: {
   application: ApplicationDto;
+  locked: boolean;
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -55,7 +57,10 @@ export function MeritsStep({
   const current = selected.filter((id) => byId.has(id));
   const sections = CV_LEAF_SECTIONS.map((section) => {
     const chosen = current.map((id) => byId.get(id)!).filter((m) => m.cvSection === section.code);
-    const others = merits.filter((m) => m.cvSection === section.code && !current.includes(m.id));
+    // En una solicitud registrada solo se muestran los seleccionados.
+    const others = locked
+      ? []
+      : merits.filter((m) => m.cvSection === section.code && !current.includes(m.id));
     return { section, chosen, others };
   }).filter(({ chosen, others }) => chosen.length + others.length > 0);
 
@@ -78,14 +83,16 @@ export function MeritsStep({
           {current.length} de {merits.length} méritos seleccionados. En el CV van por apartados;
           dentro de cada uno, en el orden de esta lista.
         </Text>
-        <Group gap="xs">
-          <Button variant="subtle" size="xs" onClick={() => setSelected(merits.map((m) => m.id))}>
-            Todos
-          </Button>
-          <Button variant="subtle" size="xs" onClick={() => setSelected([])}>
-            Ninguno
-          </Button>
-        </Group>
+        {!locked && (
+          <Group gap="xs">
+            <Button variant="subtle" size="xs" onClick={() => setSelected(merits.map((m) => m.id))}>
+              Todos
+            </Button>
+            <Button variant="subtle" size="xs" onClick={() => setSelected([])}>
+              Ninguno
+            </Button>
+          </Group>
+        )}
       </Group>
 
       {sections.length === 0 && (
@@ -114,6 +121,7 @@ export function MeritsStep({
                 <Group wrap="nowrap" gap="sm">
                   <Checkbox
                     checked={isChosen}
+                    disabled={locked}
                     onChange={(event) => toggle(merit, event.currentTarget.checked)}
                     aria-label={`Incluir ${merit.summary}`}
                   />
@@ -132,7 +140,7 @@ export function MeritsStep({
                       )}
                     </Group>
                   </div>
-                  {isChosen && (
+                  {isChosen && !locked && (
                     <Group gap={2} wrap="nowrap">
                       <ActionIcon
                         variant="subtle"
@@ -162,7 +170,7 @@ export function MeritsStep({
       ))}
 
       <Group justify="space-between">
-        <SaveIndicator state={state} />
+        {locked ? <span /> : <SaveIndicator state={state} />}
         <Group>
           <Button variant="default" onClick={onBack}>
             Anterior

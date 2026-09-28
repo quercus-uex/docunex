@@ -9,6 +9,7 @@ import { ApplicationRequirementDocument } from './application-requirement-docume
 import { Application } from './application.entity.js';
 import { ApplicationsController } from './applications.controller.js';
 import { ApplicationsService } from './applications.service.js';
+import { RegistryEntry } from './registry-entry.entity.js';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ApplicationsService } from './applications.service.js';
       Application,
       ApplicationMerit,
       ApplicationRequirementDocument,
+      RegistryEntry,
       Merit,
       Document,
     ]),

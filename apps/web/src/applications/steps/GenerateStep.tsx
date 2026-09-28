@@ -14,17 +14,22 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { IconDownload, IconFileText } from '@tabler/icons-react';
-import { formatBytes } from '../../utils/format';
+import { formatBytes, formatMegabytes } from '../../utils/format';
 import { packageFileUrl, useGenerate, usePackage, usePackageProgress } from '../api';
 import { IssueList } from '../IssueList';
+import { SizeBudget } from '../SizeBudget';
 
 /** ⑤ Generación del expediente y revisión del resultado. */
 export function GenerateStep({
   application,
+  locked,
   onBack,
+  onNext,
 }: {
   application: ApplicationDto;
+  locked: boolean;
   onBack: () => void;
+  onNext: () => void;
 }) {
   const generate = useGenerate(application.id);
   const current = usePackageProgress(application.latestPackage);
@@ -40,17 +45,26 @@ export function GenerateStep({
   return (
     <Stack>
       <Group justify="space-between">
-        <Text size="sm" c="dimmed">
-          Se une todo en un único PDF: Anexo III, DNI, currículum, hoja índice y documentos, con
-          separadores, sellos DOC_nn y marcadores. Cada generación es una versión nueva.
+        <Text size="sm" c="dimmed" style={{ flex: 1, minWidth: 240 }}>
+          {locked
+            ? 'Expediente presentado en RedSara. La solicitud está registrada y ya no se regenera.'
+            : 'Se une todo en un único PDF: Anexo III, DNI, currículum, hoja índice y documentos, con separadores, sellos DOC_nn y marcadores. Cada generación es una versión nueva.'}
         </Text>
         <Group>
           <Button variant="default" onClick={onBack}>
             Anterior
           </Button>
-          <Button onClick={start} loading={generate.isPending} disabled={running}>
-            {current ? 'Generar de nuevo' : 'Generar expediente'}
-          </Button>
+          {!locked && (
+            <Button
+              variant={current?.status === 'done' ? 'default' : 'filled'}
+              onClick={start}
+              loading={generate.isPending}
+              disabled={running}
+            >
+              {current ? 'Generar de nuevo' : 'Generar expediente'}
+            </Button>
+          )}
+          {current?.status === 'done' && <Button onClick={onNext}>Siguiente: registro</Button>}
         </Group>
       </Group>
 
@@ -98,6 +112,11 @@ function PackageResult({ pkg }: { pkg: PackageDto }) {
         </Group>
       </Paper>
       <IssueList issues={pkg.warnings} kind="warning" title="Avisos" />
+      <SizeBudget
+        size={pkg.size ?? 0}
+        estimate={false}
+        documents={[...pkg.documents].sort((a, b) => b.size - a.size).slice(0, 5)}
+      />
 
       <iframe
         src={url}
@@ -169,7 +188,14 @@ function PackageResult({ pkg }: { pkg: PackageDto }) {
                 </Table.Td>
                 <Table.Td ta="right">{document.startPage}</Table.Td>
                 <Table.Td ta="right">{document.pageCount}</Table.Td>
-                <Table.Td ta="right">{formatBytes(document.size)}</Table.Td>
+                <Table.Td ta="right" style={{ whiteSpace: 'nowrap' }}>
+                  {formatBytes(document.size)}
+                  {document.originalSize !== null && (
+                    <Text size="xs" c="dimmed">
+                      recomprimido (antes {formatMegabytes(document.originalSize)})
+                    </Text>
+                  )}
+                </Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
@@ -177,8 +203,8 @@ function PackageResult({ pkg }: { pkg: PackageDto }) {
       </Table.ScrollContainer>
       <Alert variant="light" color="gray">
         Al unir los justificantes, las firmas digitales que llevaran incrustadas dejan de poder
-        verificarse; los códigos CSV impresos en sus páginas siguen sirviendo. Firma el expediente
-        con AutoFirma al presentarlo en RedSara.
+        verificarse; los códigos CSV impresos en sus páginas siguen sirviendo. En el paso siguiente
+        tienes la guía para firmarlo con AutoFirma y presentarlo en RedSara.
       </Alert>
     </Stack>
   );

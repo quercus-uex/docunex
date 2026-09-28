@@ -93,6 +93,11 @@ function ApplicationRow({ application }: { application: ApplicationDto }) {
       </Table.Td>
       <Table.Td>
         <ApplicationStatusBadge status={application.status} />
+        {application.registryEntries[0] && (
+          <Text size="xs" c="dimmed" mt={2}>
+            Nº {application.registryEntries[0].number}
+          </Text>
+        )}
       </Table.Td>
       <Table.Td>{formatIsoDate(application.applicationDate)}</Table.Td>
       <Table.Td>{application.meritIds.length}</Table.Td>

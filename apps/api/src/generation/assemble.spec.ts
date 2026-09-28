@@ -1,10 +1,18 @@
-import { getMeritType, MERIT_EXAMPLES, type MeritType } from '@docunex/shared';
+import {
+  getMeritType,
+  MAX_PACKAGE_BYTES,
+  MERIT_EXAMPLES,
+  type MeritType,
+  type NumberedDocumentDto,
+} from '@docunex/shared';
 import { EXAMPLE_APPLICANT } from '@docunex/templates';
 import * as mupdf from 'mupdf';
 import { PDFDocument, StandardFonts } from 'pdf-lib';
 import { describe, expect, it } from 'vitest';
+import { embeddedImages, makeScannedPdf } from '../../test/support/fixtures.js';
 import { extractPageTexts } from '../pdf/text.js';
 import { assemblePackage } from './assemble.js';
+import { assembleWithinLimit, SIZE_TARGET, sizeWarnings } from './fit-size.js';
 import { checkPackage } from './self-check.js';
 import type { GenerationSnapshot, SnapshotDocument, SnapshotMerit } from './snapshot.js';
 
@@ -166,5 +174,81 @@ describe('assemblePackage', () => {
       'SELF_CHECK_STAMP',
       'SELF_CHECK_INDEX',
     ]);
+  });
+});
+
+describe('assembleWithinLimit', () => {
+  it('un expediente de escaneos de más de 10 MB baja del límite recomprimiendo las imágenes', async () => {
+    const scan = await makeScannedPdf(1);
+    const scans = new Map<string, Uint8Array>([
+      ['titulo', scan],
+      ['articulo', scan],
+    ]);
+    const read = (document: SnapshotDocument) =>
+      scans.has(document.id) ? Promise.resolve(scans.get(document.id)!) : readPdf(document);
+    const data = snapshot();
+    // Los escaneos tienen una página.
+    pageCounts.set('titulo', 1);
+    pageCounts.set('articulo', 1);
+
+    const plain = await assemblePackage(data, read);
+    expect(plain.pdf.length).toBeGreaterThan(MAX_PACKAGE_BYTES);
+
+    const steps: string[] = [];
+    const result = await assembleWithinLimit(data, read, (step) => void steps.push(step));
+    expect(result.pdf.length).toBeLessThanOrEqual(SIZE_TARGET);
+    expect(steps).toContain('Reduciendo el tamaño (1/2)');
+    expect(steps).not.toContain('Reduciendo el tamaño (2/2)');
+
+    // Solo se han tocado los escaneos, y la numeración sigue cuadrando.
+    const reduced = result.documents.filter((document) => document.originalSize !== null);
+    expect(reduced.map((document) => document.documentId)).toEqual(['titulo', 'articulo']);
+    expect(reduced.every((document) => document.size < scan.length / 10)).toBe(true);
+    expect(result.documents.map((document) => document.startPage)).toEqual(
+      plain.documents.map((document) => document.startPage),
+    );
+    expect(checkPackage(result.pdf, result.layout, result.documents)).toEqual([]);
+    expect((await embeddedImages(result.pdf)).map((image) => image.filter)).toContain('DCTDecode');
+
+    const warnings = sizeWarnings(result.pdf.length, result.documents);
+    expect(warnings.map((warning) => warning.code)).toEqual(['SIZE_REDUCED']);
+    expect(warnings[0]!.message).toContain('2 documentos');
+  }, 60_000);
+
+  it('si no llega al objetivo, prueba todos los niveles y devuelve el expediente', async () => {
+    const steps: string[] = [];
+    const result = await assembleWithinLimit(snapshot(), readPdf, (step) => void steps.push(step), {
+      target: 1000,
+    });
+    expect(steps.filter((step) => step.startsWith('Reduciendo'))).toEqual([
+      'Reduciendo el tamaño (1/2)',
+      'Reduciendo el tamaño (2/2)',
+    ]);
+    expect(result.pdf.length).toBeGreaterThan(1000);
+    expect(result.documents.every((document) => document.originalSize === null)).toBe(true);
+  });
+});
+
+describe('sizeWarnings', () => {
+  it('avisa con el desglose de los documentos más pesados si pasa de 10 MB', () => {
+    const document = (code: number, size: number): NumberedDocumentDto => ({
+      code,
+      block: 6,
+      documentId: `d${code}`,
+      name: `Documento ${code}`,
+      detail: null,
+      startPage: code,
+      pageCount: 1,
+      size,
+      originalSize: null,
+    });
+    const documents = [1, 2, 3, 4, 5, 6].map((code) => document(code, code * 1_000_000));
+    const [warning, ...rest] = sizeWarnings(21_500_000, documents);
+    expect(rest).toEqual([]);
+    expect(warning!.code).toBe('SIZE_OVER_LIMIT');
+    expect(warning!.message).toContain('21,5 MB');
+    expect(warning!.message).toContain(
+      'Documento 6 (6 MB), Documento 5 (5 MB), Documento 4 (4 MB), Documento 3 (3 MB), Documento 2 (2 MB).',
+    );
   });
 });

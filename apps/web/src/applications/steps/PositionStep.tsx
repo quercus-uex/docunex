@@ -20,9 +20,11 @@ const schema = updateApplicationSchema.required();
 /** ① Plaza, fecha de la solicitud y textos de RedSara. */
 export function PositionStep({
   application,
+  locked,
   onNext,
 }: {
   application: ApplicationDto;
+  locked: boolean;
   onNext: () => void;
 }) {
   const { data: positions = [] } = usePositions();
@@ -66,21 +68,26 @@ export function PositionStep({
     }),
   );
 
-  const restore = (field: 'expone' | 'solicita') => (
-    <Anchor
-      component="button"
-      type="button"
-      size="xs"
-      style={{ alignSelf: 'flex-start' }}
-      onClick={() =>
-        setValue(field, field === 'expone' ? defaultExpone(position) : defaultSolicita(position), {
-          shouldDirty: true,
-        })
-      }
-    >
-      Restablecer el texto propuesto
-    </Anchor>
-  );
+  const restore = (field: 'expone' | 'solicita') =>
+    !locked && (
+      <Anchor
+        component="button"
+        type="button"
+        size="xs"
+        style={{ alignSelf: 'flex-start' }}
+        onClick={() =>
+          setValue(
+            field,
+            field === 'expone' ? defaultExpone(position) : defaultSolicita(position),
+            {
+              shouldDirty: true,
+            },
+          )
+        }
+      >
+        Restablecer el texto propuesto
+      </Anchor>
+    );
 
   return (
     <form onSubmit={submit} noValidate>
@@ -109,6 +116,7 @@ export function PositionStep({
                 onChange={(value) => value && field.onChange(value)}
                 error={errors.positionId?.message}
                 allowDeselect={false}
+                readOnly={locked}
               />
             )}
           />
@@ -120,7 +128,8 @@ export function PositionStep({
                 label="Fecha de la solicitud"
                 description="La del Anexo III y la portada del CV"
                 valueFormat="DD/MM/YYYY"
-                clearable
+                clearable={!locked}
+                readOnly={locked}
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.applicationDate?.message}
@@ -137,6 +146,7 @@ export function PositionStep({
             label="Expone"
             autosize
             minRows={3}
+            readOnly={locked}
             error={errors.expone?.message}
             {...register('expone')}
           />
@@ -147,13 +157,14 @@ export function PositionStep({
             label="Solicita"
             autosize
             minRows={2}
+            readOnly={locked}
             error={errors.solicita?.message}
             {...register('solicita')}
           />
           {restore('solicita')}
         </Stack>
         <Group justify="flex-end">
-          {isDirty ? (
+          {isDirty && !locked ? (
             <Button type="submit" loading={update.isPending}>
               Guardar y seguir
             </Button>

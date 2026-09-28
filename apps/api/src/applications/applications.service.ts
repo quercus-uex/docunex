@@ -1,13 +1,21 @@
 import {
   type ApplicationDto,
+  type ApplicationStatus,
   defaultExpone,
   defaultSolicita,
+  isApplicationLocked,
   type PackageSummaryDto,
+  type registryEntryInputSchema,
   type updateApplicationSchema,
   validateApplication,
   type ValidationResult,
 } from '@docunex/shared';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import type { z } from 'zod';
@@ -20,6 +28,15 @@ import { PositionsService } from '../positions/positions.service.js';
 import { ApplicationMerit } from './application-merit.entity.js';
 import { ApplicationRequirementDocument } from './application-requirement-document.entity.js';
 import { Application } from './application.entity.js';
+import { RegistryEntry } from './registry-entry.entity.js';
+
+/** Cambios de estado que se hacen a mano (el resto los provoca generar o registrar). */
+const MANUAL_TRANSITIONS: Partial<Record<ApplicationStatus, ApplicationStatus[]>> = {
+  registered: ['closed'],
+  closed: ['registered'],
+};
+
+type RegistryEntryInput = z.output<typeof registryEntryInputSchema>;
 
 /** Fecha de hoy en España, en ISO. */
 function today(): string {
@@ -33,6 +50,7 @@ export class ApplicationsService {
     @InjectRepository(Application) private readonly applications: Repository<Application>,
     @InjectRepository(Merit) private readonly merits: Repository<Merit>,
     @InjectRepository(Document) private readonly documents: Repository<Document>,
+    @InjectRepository(RegistryEntry) private readonly registryEntries: Repository<RegistryEntry>,
     private readonly positions: PositionsService,
     private readonly snapshots: SnapshotService,
     private readonly packages: PackagesService,
@@ -99,7 +117,7 @@ export class ApplicationsService {
     id: string,
     input: z.output<typeof updateApplicationSchema>,
   ): Promise<ApplicationDto> {
-    const application = await this.findOwned(userId, id);
+    const application = await this.findEditable(userId, id);
     if (input.positionId) await this.positions.findOwned(userId, input.positionId);
     await this.applications.save(Object.assign(application, input));
     return this.get(userId, id);
@@ -111,7 +129,7 @@ export class ApplicationsService {
   }
 
   async setMerits(userId: string, id: string, meritIds: string[]): Promise<ApplicationDto> {
-    await this.findOwned(userId, id);
+    await this.findEditable(userId, id);
     if (
       meritIds.length > 0 &&
       (await this.merits.countBy({ userId, id: In(meritIds) })) !== meritIds.length
@@ -135,7 +153,7 @@ export class ApplicationsService {
     id: string,
     documentIds: string[],
   ): Promise<ApplicationDto> {
-    await this.findOwned(userId, id);
+    await this.findEditable(userId, id);
     if (
       documentIds.length > 0 &&
       (await this.documents.countBy({ userId, id: In(documentIds) })) !== documentIds.length
@@ -160,8 +178,66 @@ export class ApplicationsService {
   }
 
   async generate(userId: string, id: string): Promise<PackageSummaryDto> {
-    await this.findOwned(userId, id);
+    await this.findEditable(userId, id);
     return this.packages.enqueue(userId, id);
+  }
+
+  /**
+   * Anota el nº de registro de RedSara con el último expediente generado. La solicitud pasa a
+   * `registered` y ya no se puede modificar.
+   */
+  async register(userId: string, id: string, input: RegistryEntryInput): Promise<ApplicationDto> {
+    const application = await this.findOwned(userId, id);
+    if (application.status !== 'generated') {
+      throw new ConflictException(
+        isApplicationLocked(application.status)
+          ? 'La solicitud ya está registrada'
+          : 'Genera el expediente antes de registrarlo',
+      );
+    }
+    const latest = (await this.packages.latest([id])).get(id);
+    if (latest?.status !== 'done') {
+      throw new ConflictException(
+        'La última generación del expediente no ha terminado bien: vuelve a generarlo antes de registrarlo',
+      );
+    }
+    await this.dataSource.transaction(async (manager) => {
+      await manager.insert(RegistryEntry, {
+        userId,
+        applicationId: id,
+        packageId: latest.id,
+        number: input.number,
+        registeredAt: new Date(input.registeredAt),
+        notes: input.notes,
+      });
+      await manager.update(Application, { id }, { status: 'registered' });
+    });
+    return this.get(userId, id);
+  }
+
+  /** Corrige un asiento ya anotado (nº, fecha o notas). */
+  async updateRegistryEntry(
+    userId: string,
+    id: string,
+    entryId: string,
+    input: RegistryEntryInput,
+  ): Promise<ApplicationDto> {
+    const { affected } = await this.registryEntries.update(
+      { id: entryId, applicationId: id, userId },
+      { number: input.number, registeredAt: new Date(input.registeredAt), notes: input.notes },
+    );
+    if (!affected) throw new NotFoundException('Asiento no encontrado');
+    return this.get(userId, id);
+  }
+
+  /** Cierra una solicitud registrada o la reabre. */
+  async setStatus(userId: string, id: string, status: ApplicationStatus): Promise<ApplicationDto> {
+    const application = await this.findOwned(userId, id);
+    if (!MANUAL_TRANSITIONS[application.status]?.includes(status)) {
+      throw new ConflictException('La solicitud no puede pasar a ese estado');
+    }
+    await this.applications.update({ id }, { status });
+    return this.get(userId, id);
   }
 
   private query(userId: string) {
@@ -170,12 +246,24 @@ export class ApplicationsService {
       .innerJoinAndSelect('application.position', 'position')
       .leftJoinAndSelect('application.merits', 'meritLink')
       .leftJoinAndSelect('application.requirementDocuments', 'documentLink')
+      .leftJoinAndSelect('application.registryEntries', 'entry')
+      .leftJoin('entry.package', 'entryPackage')
+      .addSelect(['entryPackage.id', 'entryPackage.version'])
       .where('application.userId = :userId', { userId });
   }
 
   private async findOwned(userId: string, id: string): Promise<Application> {
     const application = await this.applications.findOneBy({ id, userId });
     if (!application) throw new NotFoundException('Solicitud no encontrada');
+    return application;
+  }
+
+  /** La solicitud, si todavía se puede modificar (no está registrada ni cerrada). */
+  private async findEditable(userId: string, id: string): Promise<Application> {
+    const application = await this.findOwned(userId, id);
+    if (isApplicationLocked(application.status)) {
+      throw new ConflictException('La solicitud está registrada y ya no se puede modificar');
+    }
     return application;
   }
 }
@@ -207,6 +295,17 @@ function toApplicationDto(
       (link) => link.documentId,
     ),
     latestPackage: latestPackage ?? null,
+    registryEntries: [...(application.registryEntries ?? [])]
+      .sort((a, b) => a.registeredAt.getTime() - b.registeredAt.getTime())
+      .map((entry) => ({
+        id: entry.id,
+        number: entry.number,
+        registeredAt: entry.registeredAt.toISOString(),
+        notes: entry.notes,
+        packageId: entry.packageId,
+        packageVersion: entry.package!.version,
+        createdAt: entry.createdAt.toISOString(),
+      })),
     createdAt: application.createdAt.toISOString(),
     updatedAt: application.updatedAt.toISOString(),
   };

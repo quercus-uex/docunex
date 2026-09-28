@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { isoDateSchema, nullableFormat } from './common.js';
 import type { PackageBlockNumber } from './package-blocks.js';
 import type { PositionDto } from './positions.js';
+import type { RegistryEntryDto } from './registry.js';
 import type { ValidationIssue } from './validation.js';
 
 export const APPLICATION_STATUSES = ['draft', 'generated', 'registered', 'closed'] as const;
@@ -13,6 +14,11 @@ export const APPLICATION_STATUS_LABELS: Record<ApplicationStatus, string> = {
   registered: 'Registrada',
   closed: 'Cerrada',
 };
+
+/** Una solicitud registrada o cerrada ya no se puede modificar. */
+export function isApplicationLocked(status: ApplicationStatus): boolean {
+  return status === 'registered' || status === 'closed';
+}
 
 const MAX_TEXT = 4000;
 
@@ -79,7 +85,10 @@ export interface NumberedDocumentDto {
   detail: string | null;
   startPage: number;
   pageCount: number;
+  /** Bytes en el expediente. */
   size: number;
+  /** Bytes antes de recomprimirlo para no pasar del límite, o `null` si no se ha tocado. */
+  originalSize: number | null;
 }
 
 export interface PackageBlockLayout {
@@ -120,6 +129,8 @@ export interface ApplicationDto {
   meritIds: string[];
   requirementDocumentIds: string[];
   latestPackage: PackageSummaryDto | null;
+  /** Asientos registrales, del más antiguo al más reciente. */
+  registryEntries: RegistryEntryDto[];
   createdAt: string;
   updatedAt: string;
 }

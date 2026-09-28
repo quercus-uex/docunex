@@ -9,6 +9,7 @@ import { Merit } from '../merits/merit.entity.js';
 import { DegreeVerification } from '../profile/degree-verification.entity.js';
 import { Profile } from '../profile/profile.entity.js';
 import { Position } from '../positions/position.entity.js';
+import { RegistryEntry } from '../applications/registry-entry.entity.js';
 import { User } from '../users/user.entity.js';
 
 /** Todas las entidades de TypeORM. Añade aquí cada entidad nueva. */
@@ -25,4 +26,5 @@ export const entities = [
   ApplicationRequirementDocument,
   Package,
   PackageDocument,
+  RegistryEntry,
 ];

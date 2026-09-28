@@ -4,6 +4,7 @@ import { UserOwnedEntity } from '../common/user-owned.entity.js';
 import { Position } from '../positions/position.entity.js';
 import { ApplicationMerit } from './application-merit.entity.js';
 import { ApplicationRequirementDocument } from './application-requirement-document.entity.js';
+import { RegistryEntry } from './registry-entry.entity.js';
 
 @Entity('applications')
 export class Application extends UserOwnedEntity {
@@ -38,4 +39,7 @@ export class Application extends UserOwnedEntity {
 
   @OneToMany(() => ApplicationRequirementDocument, (link) => link.application)
   requirementDocuments?: Relation<ApplicationRequirementDocument>[];
+
+  @OneToMany(() => RegistryEntry, (entry) => entry.application)
+  registryEntries?: Relation<RegistryEntry>[];
 }

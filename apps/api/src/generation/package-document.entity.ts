@@ -51,4 +51,8 @@ export class PackageDocument {
 
   @Column({ type: 'integer' })
   size: number;
+
+  /** Tamaño antes de recomprimirlo, si se ha recomprimido. */
+  @Column({ type: 'integer', nullable: true })
+  originalSize: number | null;
 }

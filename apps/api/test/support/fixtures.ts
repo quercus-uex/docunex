@@ -70,3 +70,41 @@ export async function embeddedImages(data: Uint8Array): Promise<EmbeddedImage[]>
       filter: String(stream.dict.get(PDFName.of('Filter'))).replace('/', ''),
     }));
 }
+
+/**
+ * PDF que imita un escaneo a 300 ppp guardado sin pérdida: página A4 con renglones oscuros, algo de
+ * ruido y la imagen en PNG (FlateDecode). Pesa varios MB por página.
+ */
+export async function makeScannedPdf(pages: number, label = 'Escaneo'): Promise<Buffer> {
+  const width = 2480;
+  const height = 3508;
+  const lines = Array.from({ length: 60 }, (_, index) => {
+    const y = 250 + index * 50;
+    const length = 1200 + ((index * 379) % 800);
+    return `<rect x="220" y="${y}" width="${length}" height="18" fill="#333"/>`;
+  }).join('');
+  const svg = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">${lines}</svg>`,
+  );
+  const pdf = await PDFDocument.create();
+  const font = await pdf.embedFont(StandardFonts.Helvetica);
+  for (let page = 1; page <= pages; page++) {
+    const png = await sharp({
+      create: {
+        width,
+        height,
+        channels: 3,
+        background: '#ffffff',
+        noise: { type: 'gaussian', mean: 236, sigma: 10 },
+      },
+    })
+      .composite([{ input: svg }])
+      .png({ compressionLevel: 6 })
+      .toBuffer();
+    const image = await pdf.embedPng(png);
+    const pdfPage = pdf.addPage([595.28, 841.89]);
+    pdfPage.drawImage(image, { x: 0, y: 0, width: 595.28, height: 841.89 });
+    pdfPage.drawText(`${label} - pagina ${page}`, { x: 50, y: 800, size: 14, font });
+  }
+  return Buffer.from(await pdf.save());
+}

@@ -1,4 +1,4 @@
-import type { ApplicationDto } from '@docunex/shared';
+import { type ApplicationDto, isApplicationLocked } from '@docunex/shared';
 import {
   Alert,
   Anchor,
@@ -13,7 +13,7 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { IconArrowLeft, IconTrash } from '@tabler/icons-react';
+import { IconArrowLeft, IconLock, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 import { useApplication, useDeleteApplication } from './api';
@@ -21,13 +21,18 @@ import { ApplicationStatusBadge } from './ApplicationStatusBadge';
 import { GenerateStep } from './steps/GenerateStep';
 import { MeritsStep } from './steps/MeritsStep';
 import { PositionStep } from './steps/PositionStep';
+import { RegistryStep } from './steps/RegistryStep';
 import { RequirementsStep } from './steps/RequirementsStep';
 import { ValidationStep } from './steps/ValidationStep';
 
-const LAST_STEP = 4;
+const GENERATE_STEP = 4;
+const REGISTRY_STEP = 5;
 
-/** Asistente de una solicitud (`/solicitudes/:id`), pasos ①–⑤ del plan. */
-export function ApplicationPage() {
+/**
+ * Asistente de una solicitud (`/solicitudes/:id`), pasos ①–⑥ del plan. Con `registry` se abre en la
+ * guía de registro (`/solicitudes/:id/registro`).
+ */
+export function ApplicationPage({ registry = false }: { registry?: boolean }) {
   const { id = '' } = useParams();
   const { data: application, isPending, error } = useApplication(id);
 
@@ -48,7 +53,7 @@ export function ApplicationPage() {
       </Stack>
     );
   }
-  return <Wizard application={application} />;
+  return <Wizard application={application} registry={registry} />;
 }
 
 function BackLink() {
@@ -62,13 +67,19 @@ function BackLink() {
   );
 }
 
-function Wizard({ application }: { application: ApplicationDto }) {
-  // Si ya hay un expediente, se abre en el último paso.
-  const [step, setStep] = useState(application.latestPackage ? LAST_STEP : 0);
+function initialStep(application: ApplicationDto, registry: boolean): number {
+  if (registry || isApplicationLocked(application.status)) return REGISTRY_STEP;
+  // Si ya hay un expediente, se abre en la generación.
+  return application.latestPackage ? GENERATE_STEP : 0;
+}
+
+function Wizard({ application, registry }: { application: ApplicationDto; registry: boolean }) {
+  const [step, setStep] = useState(() => initialStep(application, registry));
   const [deleting, setDeleting] = useState(false);
-  const next = () => setStep((s) => Math.min(LAST_STEP, s + 1));
+  const locked = isApplicationLocked(application.status);
+  const next = () => setStep((s) => Math.min(REGISTRY_STEP, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
-  const props = { application, onNext: next, onBack: back };
+  const props = { application, locked, onNext: next, onBack: back };
 
   return (
     <Stack maw={1100}>
@@ -88,6 +99,13 @@ function Wizard({ application }: { application: ApplicationDto }) {
         </Button>
       </Group>
       {application.position.title && <Text c="dimmed">{application.position.title}</Text>}
+      {locked && (
+        <Alert color="gray" variant="light" icon={<IconLock />}>
+          Solicitud {application.status === 'closed' ? 'cerrada' : 'registrada'} con el nº{' '}
+          {application.registryEntries[0]?.number}: se puede consultar, pero ya no se modifica. El
+          expediente presentado queda guardado tal cual.
+        </Alert>
+      )}
 
       <Stepper active={step} onStepClick={setStep} size="sm" allowNextStepsSelect>
         <Stepper.Step label="Plaza y textos">
@@ -104,6 +122,9 @@ function Wizard({ application }: { application: ApplicationDto }) {
         </Stepper.Step>
         <Stepper.Step label="Generar">
           <GenerateStep {...props} />
+        </Stepper.Step>
+        <Stepper.Step label="Registro" description="RedSara">
+          <RegistryStep {...props} />
         </Stepper.Step>
       </Stepper>
       <DeleteApplicationModal
@@ -133,6 +154,11 @@ function DeleteApplicationModal({
           ¿Seguro que quieres eliminar la solicitud de la plaza {application.position.code}? Se
           borrarán también sus expedientes generados. Tus méritos y documentos no se tocan.
         </Text>
+        {isApplicationLocked(application.status) && (
+          <Alert color="red" variant="light">
+            Está registrada: perderás el expediente que presentaste y su nº de registro.
+          </Alert>
+        )}
         <Group justify="flex-end">
           <Button variant="default" onClick={onClose}>
             Cancelar

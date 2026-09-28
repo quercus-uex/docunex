@@ -1,11 +1,12 @@
-import { MAX_PACKAGE_BYTES, validateApplication, type ValidationIssue } from '@docunex/shared';
+import { validateApplication, type ValidationIssue } from '@docunex/shared';
 import { Injectable, Logger, type OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Application } from '../applications/application.entity.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { StorageService } from '../storage/storage.service.js';
-import { assemblePackage, GenerationError } from './assemble.js';
+import { GenerationError } from './assemble.js';
+import { assembleWithinLimit, sizeWarnings } from './fit-size.js';
 import { GenerationEvents } from './generation-events.service.js';
 import { PackageDocument } from './package-document.entity.js';
 import { Package } from './package.entity.js';
@@ -18,19 +19,6 @@ export const GENERATE_PACKAGE_QUEUE = 'application.generate';
 
 export interface GeneratePackageJob {
   packageId: string;
-}
-
-function sizeWarning(size: number, documents: { name: string; size: number }[]): ValidationIssue {
-  const mb = (bytes: number) => (bytes / 1e6).toLocaleString('es-ES', { maximumFractionDigits: 1 });
-  const largest = [...documents]
-    .sort((a, b) => b.size - a.size)
-    .slice(0, 5)
-    .map((document) => `${document.name} (${mb(document.size)} MB)`)
-    .join(', ');
-  return {
-    code: 'SIZE_OVER_LIMIT',
-    message: `El expediente ocupa ${mb(size)} MB y RedSara admite 10 MB por fichero. Los documentos más pesados: ${largest}.`,
-  };
 }
 
 /** Worker que genera el expediente de una solicitud (§8). Uno cada vez. */
@@ -72,7 +60,7 @@ export class GenerationProcessor implements OnApplicationBootstrap {
       await update({ snapshot, warnings: validation.warnings });
       if (validation.errors.length > 0) return await fail(validation.errors);
 
-      const result = await assemblePackage(
+      const result = await assembleWithinLimit(
         snapshot,
         async (document) => {
           if (!document.pdfKey)
@@ -86,10 +74,11 @@ export class GenerationProcessor implements OnApplicationBootstrap {
       const problems = checkPackage(result.pdf, result.layout, result.documents);
       if (problems.length > 0) return await fail(problems);
 
-      const warnings = [...validation.warnings];
-      if (result.pdf.length > MAX_PACKAGE_BYTES) {
-        warnings.push(sizeWarning(result.pdf.length, result.documents));
-      }
+      // El aviso de tamaño estimado ya no aplica: manda el tamaño real.
+      const warnings = [
+        ...validation.warnings.filter((warning) => warning.code !== 'SIZE_ESTIMATE_OVER_LIMIT'),
+        ...sizeWarnings(result.pdf.length, result.documents),
+      ];
 
       const storageKey = `${pkg.userId}/packages/${pkg.id}.pdf`;
       await this.storage.put(storageKey, result.pdf);

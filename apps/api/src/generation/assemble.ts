@@ -233,6 +233,7 @@ export async function assemblePackage(
         startPage: first + 1,
         pageCount: count,
         size: item.data.length,
+        originalSize: null,
       });
     }
     endBlock();

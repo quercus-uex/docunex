@@ -31,6 +31,7 @@ export const router = createBrowserRouter([
       { path: 'plazas', element: <PositionsPage /> },
       { path: 'solicitudes', element: <ApplicationsPage /> },
       { path: 'solicitudes/:id', element: <ApplicationPage /> },
+      { path: 'solicitudes/:id/registro', element: <ApplicationPage registry /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },

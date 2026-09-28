@@ -1,8 +1,10 @@
 import {
   type ApplicationDto,
   applicationMeritsSchema,
+  applicationStatusSchema,
   createApplicationSchema,
   type PackageSummaryDto,
+  registryEntryInputSchema,
   requirementDocumentsSchema,
   type SessionUser,
   updateApplicationSchema,
@@ -103,5 +105,38 @@ export class ApplicationsController {
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<PackageSummaryDto> {
     return this.applications.generate(user.id, id);
+  }
+
+  /** Anota el nº de registro con el último expediente; la solicitud queda registrada. */
+  @Post(':id/registry-entries')
+  register(
+    @CurrentUser() user: SessionUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(registryEntryInputSchema))
+    body: z.output<typeof registryEntryInputSchema>,
+  ): Promise<ApplicationDto> {
+    return this.applications.register(user.id, id, body);
+  }
+
+  @Patch(':id/registry-entries/:entryId')
+  updateRegistryEntry(
+    @CurrentUser() user: SessionUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('entryId', ParseUUIDPipe) entryId: string,
+    @Body(new ZodValidationPipe(registryEntryInputSchema))
+    body: z.output<typeof registryEntryInputSchema>,
+  ): Promise<ApplicationDto> {
+    return this.applications.updateRegistryEntry(user.id, id, entryId, body);
+  }
+
+  /** Cierra (o reabre) una solicitud registrada. */
+  @Patch(':id/status')
+  setStatus(
+    @CurrentUser() user: SessionUser,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body(new ZodValidationPipe(applicationStatusSchema))
+    body: z.output<typeof applicationStatusSchema>,
+  ): Promise<ApplicationDto> {
+    return this.applications.setStatus(user.id, id, body.status);
   }
 }

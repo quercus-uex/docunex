@@ -338,11 +338,115 @@ describe('Plazas, solicitudes y generación (e2e)', () => {
       expect(failed.errors.map((issue) => issue.code)).toEqual(['POSITION_RESOLUTION_DATE']);
     });
 
+    it('solo se registra con un expediente bien generado y después queda bloqueada', async () => {
+      const entry = { number: 'REGAGE26e00012345678', registeredAt: '2026-09-28T10:15:00.000Z' };
+      const url = `/api/applications/${application.id}`;
+
+      // La última versión falló (prueba anterior).
+      const { body: failedLast } = await agent
+        .post(`${url}/registry-entries`)
+        .send(entry)
+        .expect(409);
+      expect(failedLast.message).toContain('vuelve a generarlo');
+
+      await agent
+        .put(`/api/positions/${position.id}`)
+        .send({
+          code: 'IN123456',
+          resolutionDate: '2026-09-15',
+          title: null,
+          area: null,
+          deadline: null,
+          notes: null,
+        })
+        .expect(200);
+      const { body: queued } = await agent.post(`${url}/packages`).expect(202);
+      await waitFor(
+        async () => {
+          const { body } = await agent.get(`/api/packages/${queued.id}`);
+          return body.status === 'done' ? true : undefined;
+        },
+        { timeoutMs: 60_000 },
+      );
+
+      await agent.post(`${url}/registry-entries`).send({ number: ' ' }).expect(400);
+      const { body: registered } = await agent
+        .post(`${url}/registry-entries`)
+        .send({ ...entry, notes: 'Justificante guardado' })
+        .expect(201);
+      expect(registered).toMatchObject({
+        status: 'registered',
+        registryEntries: [
+          {
+            number: entry.number,
+            registeredAt: entry.registeredAt,
+            notes: 'Justificante guardado',
+            packageId: queued.id,
+            packageVersion: 3,
+          },
+        ],
+      });
+
+      // Bloqueada: ni textos, ni selección, ni regenerar, ni un segundo registro.
+      await agent.patch(url).send({ expone: 'Otro texto' }).expect(409);
+      await agent.put(`${url}/merits`).send({ meritIds: [] }).expect(409);
+      await agent.put(`${url}/requirement-documents`).send({ documentIds: [] }).expect(409);
+      await agent.post(`${url}/packages`).expect(409);
+      await agent.post(`${url}/registry-entries`).send(entry).expect(409);
+      // El expediente registrado se sigue pudiendo descargar.
+      await agent.get(`/api/packages/${queued.id}/file`).expect(200);
+
+      // El asiento se puede corregir.
+      const entryId = registered.registryEntries[0].id as string;
+      const { body: corrected } = await agent
+        .patch(`${url}/registry-entries/${entryId}`)
+        .send({ ...entry, number: 'REGAGE26e00012345679' })
+        .expect(200);
+      expect(corrected.registryEntries[0]).toMatchObject({
+        number: 'REGAGE26e00012345679',
+        notes: null,
+      });
+      const other = await loginAs(app, 'luis@example.com');
+      await other.patch(`${url}/registry-entries/${entryId}`).send(entry).expect(404);
+      await other.patch(`${url}/status`).send({ status: 'closed' }).expect(404);
+
+      // Cerrar y reabrir; no se vuelve a borrador.
+      await agent.patch(`${url}/status`).send({ status: 'draft' }).expect(400);
+      const { body: closed } = await agent
+        .patch(`${url}/status`)
+        .send({ status: 'closed' })
+        .expect(200);
+      expect(closed.status).toBe('closed');
+      await agent.patch(url).send({ expone: 'Otro texto' }).expect(409);
+      await agent.patch(`${url}/status`).send({ status: 'closed' }).expect(409);
+      const { body: reopened } = await agent
+        .patch(`${url}/status`)
+        .send({ status: 'registered' })
+        .expect(200);
+      expect(reopened.status).toBe('registered');
+    }, 90_000);
+
+    it('una solicitud en borrador no se puede registrar ni cerrar', async () => {
+      const { body: draft } = await agent
+        .post('/api/applications')
+        .send({ positionId: position.id })
+        .expect(201);
+      const { body } = await agent
+        .post(`/api/applications/${draft.id}/registry-entries`)
+        .send({ number: '1', registeredAt: '2026-09-28T10:15:00+02:00' })
+        .expect(409);
+      expect(body.message).toBe('Genera el expediente antes de registrarlo');
+      await agent
+        .patch(`/api/applications/${draft.id}/status`)
+        .send({ status: 'closed' })
+        .expect(409);
+    });
+
     it('al borrar el usuario se borra todo', async () => {
       const dataSource = app.get(DataSource);
       await dataSource.query(`DELETE FROM users WHERE email = 'ana@example.com'`);
       const [{ count }] = await dataSource.query(
-        `SELECT (SELECT count(*) FROM applications) + (SELECT count(*) FROM packages WHERE user_id NOT IN (SELECT id FROM users)) AS count`,
+        `SELECT (SELECT count(*) FROM applications) + (SELECT count(*) FROM packages WHERE user_id NOT IN (SELECT id FROM users)) + (SELECT count(*) FROM registry_entries) AS count`,
       );
       expect(Number(count)).toBe(0);
       await request(app.getHttpServer()).get('/api/applications').expect(401);

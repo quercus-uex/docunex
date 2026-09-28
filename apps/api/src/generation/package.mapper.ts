@@ -31,6 +31,7 @@ export function toPackageDto(pkg: Package): PackageDto {
       startPage: document.startPage,
       pageCount: document.pageCount,
       size: document.size,
+      originalSize: document.originalSize,
     })),
   };
 }

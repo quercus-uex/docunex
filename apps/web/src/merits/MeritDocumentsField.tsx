@@ -31,12 +31,15 @@ export function MeritDocumentsField({
   onChange,
   uploadKind,
   error,
+  readOnly = false,
   emptyText = 'Sin justificantes. El mérito se puede guardar, pero no se podrá incluir en una solicitud hasta que tenga al menos uno.',
 }: {
   value: string[];
   onChange: (ids: string[]) => void;
   uploadKind: DocumentKind;
   error?: string;
+  /** Solo muestra la lista, sin poder cambiarla. */
+  readOnly?: boolean;
   emptyText?: string;
 }) {
   const { data: documents = [] } = useDocuments();
@@ -112,43 +115,45 @@ export function MeritDocumentsField({
                   )}
                 </div>
                 {document && <DocumentStatusBadge document={document} />}
-                <Group gap={2} wrap="nowrap">
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    aria-label="Subir"
-                    disabled={index === 0}
-                    onClick={() => move(index, -1)}
-                  >
-                    <IconArrowUp size={16} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    aria-label="Bajar"
-                    disabled={index === value.length - 1}
-                    onClick={() => move(index, 1)}
-                  >
-                    <IconArrowDown size={16} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    color="gray"
-                    aria-label="Editar nombre"
-                    disabled={!document}
-                    onClick={() => document && setEditing(document)}
-                  >
-                    <IconEdit size={16} />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="subtle"
-                    color="red"
-                    aria-label="Quitar"
-                    onClick={() => onChange(value.filter((other) => other !== id))}
-                  >
-                    <IconX size={16} />
-                  </ActionIcon>
-                </Group>
+                {!readOnly && (
+                  <Group gap={2} wrap="nowrap">
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      aria-label="Subir"
+                      disabled={index === 0}
+                      onClick={() => move(index, -1)}
+                    >
+                      <IconArrowUp size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      aria-label="Bajar"
+                      disabled={index === value.length - 1}
+                      onClick={() => move(index, 1)}
+                    >
+                      <IconArrowDown size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      aria-label="Editar nombre"
+                      disabled={!document}
+                      onClick={() => document && setEditing(document)}
+                    >
+                      <IconEdit size={16} />
+                    </ActionIcon>
+                    <ActionIcon
+                      variant="subtle"
+                      color="red"
+                      aria-label="Quitar"
+                      onClick={() => onChange(value.filter((other) => other !== id))}
+                    >
+                      <IconX size={16} />
+                    </ActionIcon>
+                  </Group>
+                )}
               </Group>
             </Paper>
           );
@@ -159,32 +164,34 @@ export function MeritDocumentsField({
           {error}
         </Text>
       )}
-      <Group align="flex-end">
-        <Select
-          aria-label="Añadir un documento ya subido"
-          placeholder="Añadir un documento ya subido"
-          data={options}
-          value={null}
-          onChange={(id) => id && add([id])}
-          searchable
-          nothingFoundMessage="No hay más documentos"
-          disabled={full}
-          style={{ flex: 1 }}
-        />
-        <FileButton onChange={uploadFiles} accept={ACCEPT} multiple disabled={full}>
-          {(props) => (
-            <Button
-              {...props}
-              variant="default"
-              leftSection={<IconUpload size={16} />}
-              loading={upload.isPending}
-              disabled={full}
-            >
-              Subir
-            </Button>
-          )}
-        </FileButton>
-      </Group>
+      {!readOnly && (
+        <Group align="flex-end">
+          <Select
+            aria-label="Añadir un documento ya subido"
+            placeholder="Añadir un documento ya subido"
+            data={options}
+            value={null}
+            onChange={(id) => id && add([id])}
+            searchable
+            nothingFoundMessage="No hay más documentos"
+            disabled={full}
+            style={{ flex: 1 }}
+          />
+          <FileButton onChange={uploadFiles} accept={ACCEPT} multiple disabled={full}>
+            {(props) => (
+              <Button
+                {...props}
+                variant="default"
+                leftSection={<IconUpload size={16} />}
+                loading={upload.isPending}
+                disabled={full}
+              >
+                Subir
+              </Button>
+            )}
+          </FileButton>
+        </Group>
+      )}
       <DocumentEditModal document={editing} onClose={() => setEditing(null)} />
     </Stack>
   );
