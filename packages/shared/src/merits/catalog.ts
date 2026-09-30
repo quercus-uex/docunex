@@ -295,11 +295,20 @@ const master = defineMeritType('master', {
 const teacherTraining = defineMeritType('teacher_training', {
   label: 'Curso de Adaptación Pedagógica',
   description:
-    'CAP o equivalente. No tiene datos: basta con adjuntar el justificante para que se marque "SI".',
+    'CAP o equivalente. En el CV basta con adjuntar el justificante para que se marque "SI"; los créditos solo sirven para estimar la puntuación.',
   sections: ['2.d'],
-  fields: {},
+  fields: {
+    credits: decimal('Créditos', {
+      decimals: 1,
+      max: 300,
+      help: 'El baremo lo puntúa a 0,02 puntos por crédito.',
+    }),
+  },
   sortDate: () => null,
-  summary: () => 'Curso de Adaptación Pedagógica',
+  summary: (d) =>
+    d.credits === null
+      ? 'Curso de Adaptación Pedagógica'
+      : `Curso de Adaptación Pedagógica (${withComma(d.credits)} créditos)`,
 });
 
 const otherDegree = defineMeritType('other_degree', {

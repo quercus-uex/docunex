@@ -20,9 +20,12 @@ import {
   Title,
 } from '@mantine/core';
 import { IconArrowDown, IconArrowUp } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useMerits } from '../../merits/api';
+import { MeritScoreBadge } from '../../scoring/MeritScoreBadge';
+import { ScoreSummaryCard } from '../../scoring/ScoreSummaryCard';
+import { useMeritScore } from '../../scoring/useMeritScore';
 import { useSetApplicationMerits } from '../api';
 import { SaveIndicator } from '../SaveIndicator';
 import { useAutoSave } from '../useAutoSave';
@@ -43,6 +46,14 @@ export function MeritsStep({
   const [selected, setSelected] = useState(application.meritIds);
   const save = useSetApplicationMerits(application.id);
   const state = useAutoSave(selected, (ids) => save.mutateAsync(ids));
+  const referenceDate = application.position.deadline ?? application.applicationDate;
+  const chosenMerits = useMemo(() => {
+    if (!merits) return undefined;
+    const ids = new Set(selected);
+    return merits.filter((merit) => ids.has(merit.id));
+  }, [merits, selected]);
+  const score = useMeritScore(chosenMerits, { referenceDate });
+  const allScore = useMeritScore(merits, { referenceDate });
 
   if (isPending || !merits) {
     return (
@@ -95,6 +106,19 @@ export function MeritsStep({
         )}
       </Group>
 
+      {score && (
+        <ScoreSummaryCard
+          summary={score}
+          description={`Con los méritos seleccionados; los periodos se cuentan hasta ${
+            application.position.deadline
+              ? 'el fin del plazo de la plaza'
+              : application.applicationDate
+                ? 'la fecha de la solicitud'
+                : 'hoy'
+          }. Los que no marques no suman.`}
+        />
+      )}
+
       {sections.length === 0 && (
         <Text c="dimmed">
           No tienes méritos.{' '}
@@ -116,6 +140,8 @@ export function MeritsStep({
           </Group>
           {[...chosen, ...others].map((merit, index) => {
             const isChosen = index < chosen.length;
+            // Los no seleccionados muestran lo que sumarían (calculado con todos los méritos).
+            const rowScore = isChosen ? score : allScore;
             return (
               <Paper key={merit.id} withBorder px="sm" py={6} opacity={isChosen ? 1 : 0.6}>
                 <Group wrap="nowrap" gap="sm">
@@ -133,6 +159,16 @@ export function MeritsStep({
                       <Text size="xs" c="dimmed">
                         {getMeritType(merit.type).label}
                       </Text>
+                      {rowScore && (
+                        <MeritScoreBadge
+                          size="xs"
+                          score={rowScore.byMerit.get(merit.id)}
+                          baremo={rowScore.baremo}
+                          unscoredReason={
+                            rowScore.unscored.find((u) => u.meritId === merit.id)?.reason
+                          }
+                        />
+                      )}
                       {merit.documents.length === 0 && (
                         <Badge color="red" variant="light" size="xs">
                           Sin justificante
