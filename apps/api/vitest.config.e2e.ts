@@ -12,6 +12,8 @@ export default defineConfig({
         process.env.TEST_DATABASE_URL ?? 'postgres://docunex:docunex@localhost:5432/docunex_test',
       JWT_SECRET: 'e2e-secret-e2e-secret-e2e-secret-e2e',
       STORAGE_DIR: './data/test-storage',
+      // Servidor local de las pruebas con una réplica de la página de convocatorias PCI.
+      UEX_PCI_URL: 'http://127.0.0.1:39517/convocatorias-pci/',
     },
   },
 });

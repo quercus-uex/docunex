@@ -1,3 +1,4 @@
+import type { PositionUexStatus } from '@docunex/shared';
 import { Column, Entity, Unique } from 'typeorm';
 import { UserOwnedEntity } from '../common/user-owned.entity.js';
 
@@ -18,9 +19,19 @@ export class Position extends UserOwnedEntity {
   @Column({ type: 'varchar', length: 255, nullable: true })
   area: string | null;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  department: string | null;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  center: string | null;
+
   @Column({ type: 'date', nullable: true })
   deadline: string | null;
 
   @Column({ type: 'text', nullable: true })
   notes: string | null;
+
+  /** Fase y documentos según la última consulta a la web de la UEx. */
+  @Column({ type: 'jsonb', nullable: true })
+  uexStatus: PositionUexStatus | null;
 }

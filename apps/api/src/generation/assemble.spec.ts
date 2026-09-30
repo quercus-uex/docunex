@@ -70,7 +70,12 @@ function snapshot(overrides: Partial<GenerationSnapshot> = {}): GenerationSnapsh
   const certificacion = doc('certificacion', 3, 'transcript');
   const compartido = doc('compartido', 1);
   return {
-    profile: { ...EXAMPLE_APPLICANT, idDocumentId: 'dni', degreeVerifications: [] },
+    profile: {
+      ...EXAMPLE_APPLICANT,
+      department: null,
+      idDocumentId: 'dni',
+      degreeVerifications: [],
+    },
     idDocument: doc('dni', 1, 'identity'),
     position: { id: 'plaza', code: 'IN123456', resolutionDate: '2026-09-15' },
     applicationDate: '2026-09-28',
