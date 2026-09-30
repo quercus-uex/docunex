@@ -73,7 +73,7 @@ export function PositionStep({
       <Anchor
         component="button"
         type="button"
-        size="xs"
+        size="sm"
         style={{ alignSelf: 'flex-start' }}
         onClick={() =>
           setValue(

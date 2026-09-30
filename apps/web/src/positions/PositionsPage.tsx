@@ -27,7 +27,7 @@ export function PositionsPage() {
   const [deleting, setDeleting] = useState<PositionDto | null>(null);
 
   return (
-    <Stack maw={960}>
+    <Stack>
       <Group justify="space-between" align="flex-end">
         <Title order={2}>Plazas</Title>
         <Button leftSection={<IconPlus size={16} />} onClick={() => setEditing(null)}>
@@ -95,7 +95,7 @@ export function PositionsPage() {
                       <ActionIcon
                         variant="subtle"
                         color="gray"
-                        aria-label="Editar"
+                        aria-label={`Editar la plaza ${position.code}`}
                         onClick={() => setEditing(position)}
                       >
                         <IconEdit size={18} />
@@ -103,7 +103,7 @@ export function PositionsPage() {
                       <ActionIcon
                         variant="subtle"
                         color="red"
-                        aria-label="Eliminar"
+                        aria-label={`Eliminar la plaza ${position.code}`}
                         onClick={() => setDeleting(position)}
                       >
                         <IconTrash size={18} />

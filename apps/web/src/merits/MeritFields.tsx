@@ -244,8 +244,8 @@ function ListField({ path, def }: { path: string; def: Extract<FieldDef, { kind:
       <Group>
         <Button
           variant="light"
-          size="xs"
-          leftSection={<IconPlus size={14} />}
+          size="sm"
+          leftSection={<IconPlus size={16} />}
           disabled={fields.length >= def.max}
           onClick={() => append(emptyFormValues(def.fields))}
         >

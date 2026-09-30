@@ -57,7 +57,7 @@ export function MeritsPage() {
   );
 
   return (
-    <Stack maw={960}>
+    <Stack>
       <Group justify="space-between" align="flex-end">
         <Title order={2}>Méritos</Title>
         <Group>
@@ -85,7 +85,8 @@ export function MeritsPage() {
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(event) => setSearch(event.currentTarget.value)}
-          w={260}
+          w={{ base: '100%', sm: 360 }}
+          aria-label="Buscar méritos"
         />
       )}
 
@@ -184,10 +185,16 @@ function MeritCard({ merit, onDelete }: { merit: MeritDto; onDelete: () => void 
   const processing = merit.documents.some((document) => document.status === 'processing');
 
   return (
-    <Paper withBorder px="md" py="sm">
+    <Paper withBorder px="lg" py="md">
       <Group justify="space-between" wrap="nowrap" align="flex-start">
         <Stack gap={4} style={{ minWidth: 0 }}>
-          <Anchor component={Link} to={`/meritos/${merit.id}`} fw={500} c="inherit">
+          <Anchor
+            component={Link}
+            to={`/meritos/${merit.id}`}
+            fw={600}
+            c="inherit"
+            underline="hover"
+          >
             {merit.summary}
           </Anchor>
           <Group gap="xs">
@@ -195,7 +202,7 @@ function MeritCard({ merit, onDelete }: { merit: MeritDto; onDelete: () => void 
               {def.label}
             </Text>
             {merit.documents.length === 0 ? (
-              <Badge color="red" variant="light" size="sm">
+              <Badge color="red" variant="light">
                 Sin justificante
               </Badge>
             ) : (
@@ -205,19 +212,19 @@ function MeritCard({ merit, onDelete }: { merit: MeritDto; onDelete: () => void 
                 maw={360}
                 withArrow
               >
-                <Badge color="gray" variant="light" size="sm">
+                <Badge color="gray" variant="light">
                   {merit.documents.length}{' '}
                   {merit.documents.length === 1 ? 'justificante' : 'justificantes'}
                 </Badge>
               </Tooltip>
             )}
             {failed > 0 && (
-              <Badge color="red" variant="light" size="sm">
+              <Badge color="red" variant="light">
                 {failed === 1 ? 'Justificante con error' : `${failed} justificantes con error`}
               </Badge>
             )}
             {processing && (
-              <Badge color="blue" variant="light" size="sm">
+              <Badge color="blue" variant="light">
                 Procesando
               </Badge>
             )}
@@ -234,11 +241,16 @@ function MeritCard({ merit, onDelete }: { merit: MeritDto; onDelete: () => void 
             to={`/meritos/${merit.id}`}
             variant="subtle"
             color="gray"
-            aria-label="Editar"
+            aria-label={`Editar ${merit.summary}`}
           >
             <IconEdit size={18} />
           </ActionIcon>
-          <ActionIcon variant="subtle" color="red" aria-label="Eliminar" onClick={onDelete}>
+          <ActionIcon
+            variant="subtle"
+            color="red"
+            aria-label={`Eliminar ${merit.summary}`}
+            onClick={onDelete}
+          >
             <IconTrash size={18} />
           </ActionIcon>
         </Group>
