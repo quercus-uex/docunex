@@ -304,12 +304,18 @@ function UsageList({ id, enabled }: { id: string; enabled: boolean }) {
         </div>
       ))}
       {data?.applications.map((application) => (
-        <div key={application.id}>
-          <Anchor component={Link} to={`/solicitudes/${application.id}`} size="sm">
+        <div key={`${application.id}-${application.role}`}>
+          <Anchor
+            component={Link}
+            to={`/solicitudes/${application.id}${application.role === 'hiring' ? '/contratacion' : ''}`}
+            size="sm"
+          >
             Solicitud {application.positionCode}
           </Anchor>
           <Text size="xs" c="dimmed">
-            Documento de requisitos (bloque 5)
+            {application.role === 'hiring'
+              ? 'Documentación de la segunda fase (contratación)'
+              : 'Documento de requisitos (bloque 5)'}
           </Text>
         </div>
       ))}

@@ -98,6 +98,19 @@ function ApplicationRow({ application }: { application: ApplicationDto }) {
             Nº {application.registryEntries[0].number}
           </Text>
         )}
+        {application.hiring && (
+          <Anchor
+            component={Link}
+            to={`/solicitudes/${application.id}/contratacion`}
+            size="xs"
+            c={application.hiring.complete ? 'green' : undefined}
+          >
+            Fase 2:{' '}
+            {application.hiring.complete
+              ? 'documentación completa'
+              : `${application.hiring.requiredDone} de ${application.hiring.requiredTotal} documentos`}
+          </Anchor>
+        )}
       </Table.Td>
       <Table.Td>{formatIsoDate(application.applicationDate)}</Table.Td>
       <Table.Td>{application.meritIds.length}</Table.Td>

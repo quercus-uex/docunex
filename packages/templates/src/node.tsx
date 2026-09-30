@@ -7,8 +7,9 @@ import type { ReactElement } from 'react';
 import { AnnexIII } from './annex/AnnexIII.js';
 import { CvDocument } from './cv/CvDocument.js';
 import type { CvModel } from './cv/model.js';
+import { HiringSheet } from './hiring/HiringSheet.js';
 import { IndexSheet } from './index-sheet/IndexSheet.js';
-import type { AnnexIIIModel, IndexSheetModel, SeparatorModel } from './models.js';
+import type { AnnexIIIModel, HiringSheetModel, IndexSheetModel, SeparatorModel } from './models.js';
 import { Separator } from './separator/Separator.js';
 
 function render(element: ReactElement): Promise<Buffer> {
@@ -20,3 +21,4 @@ export const renderAnnexIII = (model: AnnexIIIModel) => render(<AnnexIII model={
 export const renderCv = (model: CvModel) => render(<CvDocument model={model} />);
 export const renderIndexSheet = (model: IndexSheetModel) => render(<IndexSheet model={model} />);
 export const renderSeparator = (model: SeparatorModel) => render(<Separator model={model} />);
+export const renderHiringSheet = (model: HiringSheetModel) => render(<HiringSheet model={model} />);

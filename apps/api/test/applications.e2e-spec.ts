@@ -195,7 +195,9 @@ describe('Plazas, solicitudes y generación (e2e)', () => {
     it('un documento de requisitos no se puede borrar y aparece en sus usos', async () => {
       const id = documents.Titulo!.id;
       const { body } = await agent.get(`/api/documents/${id}/usages`).expect(200);
-      expect(body.applications).toEqual([{ id: application.id, positionCode: 'IN123456' }]);
+      expect(body.applications).toEqual([
+        { id: application.id, positionCode: 'IN123456', role: 'requirement' },
+      ]);
       await agent.delete(`/api/documents/${id}`).expect(409);
       const { body: list } = await agent.get('/api/documents?unused=true').expect(200);
       expect((list as DocumentDto[]).map((d) => d.id)).not.toContain(id);

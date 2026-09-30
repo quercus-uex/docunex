@@ -38,6 +38,10 @@ export function HomePage() {
           </Anchor>{' '}
           para una plaza y genera el PDF listo para firmar y registrar.
         </List.Item>
+        <List.Item>
+          Si te seleccionan, prepara en la misma solicitud la segunda fase: los datos para el
+          contrato (cuenta bancaria, Seguridad Social…) y los documentos para formalizarlo.
+        </List.Item>
       </List>
     </Stack>
   );

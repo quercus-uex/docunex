@@ -29,6 +29,7 @@ import {
 import { DateTimePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import {
+  IconArrowRight,
   IconCheck,
   IconCopy,
   IconDownload,
@@ -54,9 +55,11 @@ import {
 export function RegistryStep({
   application,
   onBack,
+  onNext,
 }: {
   application: ApplicationDto;
   onBack: () => void;
+  onNext: () => void;
 }) {
   const pkg = application.latestPackage;
   const entry = application.registryEntries[0];
@@ -107,6 +110,11 @@ export function RegistryStep({
         <Button variant="default" onClick={onBack}>
           Anterior
         </Button>
+        {entry && (
+          <Button rightSection={<IconArrowRight size={16} />} onClick={onNext}>
+            Segunda fase: contratación
+          </Button>
+        )}
       </Group>
     </Stack>
   );

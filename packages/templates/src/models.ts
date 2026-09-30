@@ -45,3 +45,31 @@ export interface SeparatorModel {
   number: number;
   title: string;
 }
+
+/** Datos de la contratación (segunda fase), ya normalizados. */
+export interface HiringApplicantData {
+  iban: string | null;
+  socialSecurityNumber: string | null;
+  nationality: string | null;
+  birthPlace: string | null;
+}
+
+export interface HiringSheetEntry {
+  label: string;
+  required: boolean;
+  /** Documentos que se adjuntan, con su página de inicio en el PDF (vacío si falta). */
+  documents: { name: string; page: number | null }[];
+}
+
+/** Hoja resumen de la documentación de la segunda fase (formalización del contrato). */
+export interface HiringSheetModel {
+  applicant: Omit<Applicant, 'degree'>;
+  hiring: HiringApplicantData;
+  positionCode: string | null;
+  positionTitle: string | null;
+  /** Nº de registro de la solicitud (primera fase). */
+  registryNumber: string | null;
+  /** Fecha en ISO (`YYYY-MM-DD`). */
+  date: string | null;
+  entries: HiringSheetEntry[];
+}

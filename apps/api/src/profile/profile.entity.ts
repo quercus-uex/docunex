@@ -12,7 +12,10 @@ import {
 import { Document } from '../documents/document.entity.js';
 import { User } from '../users/user.entity.js';
 
-/** Datos personales del Anexo III (1:1 con el usuario). Todos opcionales hasta generar. */
+/**
+ * Datos personales del Anexo III y de la contratación (1:1 con el usuario). Todos opcionales hasta
+ * generar.
+ */
 @Entity('profiles')
 export class Profile {
   @PrimaryColumn('uuid')
@@ -63,6 +66,22 @@ export class Profile {
   @ManyToOne(() => Document, { onDelete: 'SET NULL' })
   @JoinColumn()
   idDocument?: Relation<Document> | null;
+
+  // Segunda fase (contratación). Se guardan aquí para reutilizarlos en todas las solicitudes.
+
+  /** IBAN normalizado (sin espacios). */
+  @Column({ type: 'varchar', length: 34, nullable: true })
+  iban: string | null;
+
+  /** Nº de afiliación a la Seguridad Social (NUSS), 12 dígitos. */
+  @Column({ type: 'varchar', length: 12, nullable: true })
+  socialSecurityNumber: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  nationality: string | null;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  birthPlace: string | null;
 
   @CreateDateColumn({ type: 'timestamptz' })
   createdAt: Date;

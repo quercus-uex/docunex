@@ -6,9 +6,11 @@ import {
   EXAMPLE_ANNEX,
   EXAMPLE_CV_FULL,
   EXAMPLE_CV_SPARSE,
+  EXAMPLE_HIRING,
   EXAMPLE_INDEX,
   EXAMPLE_SEPARATORS,
 } from './fixtures.js';
+import { HiringSheet } from './hiring/HiringSheet.js';
 import { IndexSheet } from './index-sheet/IndexSheet.js';
 import { Separator } from './separator/Separator.js';
 import { renderPages } from './test/pdf.js';
@@ -133,5 +135,31 @@ describe('Separator', () => {
     const [model] = EXAMPLE_SEPARATORS as [(typeof EXAMPLE_SEPARATORS)[number]];
     const pages = await renderPages(<Separator model={model} />);
     expect(pages).toEqual([`${model.number} ${model.title}`]);
+  });
+});
+
+describe('HiringSheet', () => {
+  it('resume los datos del contrato y la documentación que se adjunta', async () => {
+    const pages = await renderPages(<HiringSheet model={EXAMPLE_HIRING} />);
+    expect(pages).toHaveLength(1);
+    const [text] = pages as [string];
+    for (const expected of [
+      'DOCUMENTACIÓN PARA LA FORMALIZACIÓN DEL CONTRATO',
+      'Código de la plaza IN123456',
+      'Nº de registro de la solicitud REGAGE26e00012345678',
+      'Apellidos y nombre Fernández Gómez, Lucía',
+      'Fecha de nacimiento 14/03/1995',
+      'Nacionalidad Española',
+      'Domicilio C/ Ejemplo, 12, 3º B, 10003 Cáceres',
+      'IBAN (cuenta para la nómina) ES91 2100 0418 4502 0005 1332',
+      'Nº de afiliación a la Seguridad Social 28/12345678/40',
+      '1 DNI, NIE o pasaporte · DNI (anverso) (pág. 2) · DNI (reverso) (pág. 3) 2',
+      '2 Certificado de titularidad de la cuenta bancaria · Certificado de titularidad 4',
+      '3 Modelo 145 del IRPF No se adjunta',
+      '4 Autorización de residencia y trabajo (si procede) No se adjunta',
+      'Fecha: 28/09/2026',
+    ]) {
+      expect(text).toContain(expected);
+    }
   });
 });

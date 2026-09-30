@@ -9,6 +9,7 @@ export const DOCUMENT_KINDS = [
   'grant_credential',
   'contract',
   'publication',
+  'declaration',
   'other',
 ] as const;
 
@@ -22,6 +23,7 @@ export const DOCUMENT_KIND_LABELS: Record<DocumentKind, string> = {
   grant_credential: 'Credencial de beca',
   contract: 'Contrato',
   publication: 'Publicación',
+  declaration: 'Declaración',
   other: 'Otro',
 };
 

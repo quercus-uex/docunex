@@ -2,6 +2,7 @@ import { ApplicationMerit } from '../applications/application-merit.entity.js';
 import { ApplicationRequirementDocument } from '../applications/application-requirement-document.entity.js';
 import { Application } from '../applications/application.entity.js';
 import { Document } from '../documents/document.entity.js';
+import { ApplicationHiringDocument } from '../hiring/application-hiring-document.entity.js';
 import { PackageDocument } from '../generation/package-document.entity.js';
 import { Package } from '../generation/package.entity.js';
 import { MeritDocument } from '../merits/merit-document.entity.js';
@@ -27,4 +28,5 @@ export const entities = [
   Package,
   PackageDocument,
   RegistryEntry,
+  ApplicationHiringDocument,
 ];

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateSchema, nullableFormat } from './common.js';
+import type { HiringSummaryDto } from './hiring.js';
 import type { PackageBlockNumber } from './package-blocks.js';
 import type { PositionDto } from './positions.js';
 import type { RegistryEntryDto } from './registry.js';
@@ -131,6 +132,8 @@ export interface ApplicationDto {
   latestPackage: PackageSummaryDto | null;
   /** Asientos registrales, del más antiguo al más reciente. */
   registryEntries: RegistryEntryDto[];
+  /** Progreso de la segunda fase (contratación); `null` si aún no está registrada. */
+  hiring: HiringSummaryDto | null;
   createdAt: string;
   updatedAt: string;
 }

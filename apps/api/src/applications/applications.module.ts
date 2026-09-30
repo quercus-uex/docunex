@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Document } from '../documents/document.entity.js';
 import { GenerationModule } from '../generation/generation.module.js';
+import { HiringModule } from '../hiring/hiring.module.js';
 import { Merit } from '../merits/merit.entity.js';
 import { PositionsModule } from '../positions/positions.module.js';
 import { ApplicationMerit } from './application-merit.entity.js';
@@ -15,6 +16,7 @@ import { RegistryEntry } from './registry-entry.entity.js';
   imports: [
     PositionsModule,
     GenerationModule,
+    HiringModule,
     TypeOrmModule.forFeature([
       Application,
       ApplicationMerit,

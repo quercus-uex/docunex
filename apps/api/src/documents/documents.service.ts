@@ -13,6 +13,7 @@ import type { Readable } from 'node:stream';
 import { In, Repository } from 'typeorm';
 import { isUniqueViolation } from '../common/database-errors.js';
 import { ApplicationRequirementDocument } from '../applications/application-requirement-document.entity.js';
+import { ApplicationHiringDocument } from '../hiring/application-hiring-document.entity.js';
 import { JobsService } from '../jobs/jobs.service.js';
 import { MeritDocument } from '../merits/merit-document.entity.js';
 import { meritSummary } from '../merits/merit.mapper.js';
@@ -45,6 +46,8 @@ export class DocumentsService {
     @InjectRepository(MeritDocument) private readonly meritLinks: Repository<MeritDocument>,
     @InjectRepository(ApplicationRequirementDocument)
     private readonly requirementLinks: Repository<ApplicationRequirementDocument>,
+    @InjectRepository(ApplicationHiringDocument)
+    private readonly hiringLinks: Repository<ApplicationHiringDocument>,
     @InjectRepository(Profile) private readonly profiles: Repository<Profile>,
     private readonly storage: StorageService,
     private readonly jobs: JobsService,
@@ -73,6 +76,9 @@ export class DocumentsService {
           'NOT EXISTS (SELECT 1 FROM application_requirement_documents link WHERE link.document_id = document.id)',
         )
         .andWhere(
+          'NOT EXISTS (SELECT 1 FROM application_hiring_documents link WHERE link.document_id = document.id)',
+        )
+        .andWhere(
           'NOT EXISTS (SELECT 1 FROM profiles profile WHERE profile.id_document_id = document.id)',
         );
     }
@@ -86,7 +92,7 @@ export class DocumentsService {
   /** Méritos y solicitudes que lo usan, y si es la copia del DNI del perfil. */
   async usages(userId: string, id: string): Promise<DocumentUsagesDto> {
     await this.findOwned(userId, id);
-    const [links, idDocument, requirementLinks] = await Promise.all([
+    const [links, idDocument, requirementLinks, hiringLinks] = await Promise.all([
       this.meritLinks.find({
         where: { documentId: id },
         relations: { merit: true },
@@ -98,7 +104,17 @@ export class DocumentsService {
         relations: { application: { position: true } },
         order: { application: { createdAt: 'DESC' } },
       }),
+      this.hiringLinks.find({
+        where: { documentId: id },
+        relations: { application: { position: true } },
+        order: { application: { createdAt: 'DESC' } },
+      }),
     ]);
+    const hiringApplications = new Map(
+      hiringLinks.flatMap(({ application }) =>
+        application?.position ? [[application.id, application.position.code] as const] : [],
+      ),
+    );
     return {
       merits: links.flatMap(({ merit }) =>
         merit
@@ -113,11 +129,25 @@ export class DocumentsService {
           : [],
       ),
       idDocument,
-      applications: requirementLinks.flatMap(({ application }) =>
-        application?.position
-          ? [{ id: application.id, positionCode: application.position.code }]
-          : [],
-      ),
+      applications: [
+        ...requirementLinks.flatMap(({ application }) =>
+          application?.position
+            ? [
+                {
+                  id: application.id,
+                  positionCode: application.position.code,
+                  role: 'requirement' as const,
+                },
+              ]
+            : [],
+        ),
+        // Una entrada por solicitud aunque cubra varias entradas de la lista.
+        ...[...hiringApplications].map(([applicationId, positionCode]) => ({
+          id: applicationId,
+          positionCode,
+          role: 'hiring' as const,
+        })),
+      ],
     };
   }
 
@@ -267,13 +297,16 @@ export class DocumentsService {
         .where({ documentId: In(ids) })
         .groupBy('link.documentId')
         .getRawMany<{ documentId: string; merits: number }>(),
-      this.requirementLinks
-        .createQueryBuilder('link')
-        .select('link.documentId', 'documentId')
-        .addSelect('COUNT(*)::int', 'applications')
-        .where({ documentId: In(ids) })
-        .groupBy('link.documentId')
-        .getRawMany<{ documentId: string; applications: number }>(),
+      // Solicitudes distintas que lo usan, en los requisitos o en la segunda fase.
+      this.requirementLinks.manager.query<{ documentId: string; applications: number }[]>(
+        `SELECT document_id AS "documentId", COUNT(DISTINCT application_id)::int AS applications
+           FROM (SELECT document_id, application_id FROM application_requirement_documents
+                 UNION ALL
+                 SELECT document_id, application_id FROM application_hiring_documents) link
+          WHERE document_id = ANY($1)
+          GROUP BY document_id`,
+        [ids],
+      ),
       this.profiles.findOne({ where: { userId }, select: { userId: true, idDocumentId: true } }),
     ]);
     const meritCounts = new Map(counts.map((row) => [row.documentId, row.merits]));
