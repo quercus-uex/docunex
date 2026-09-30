@@ -58,3 +58,12 @@ apps/web          SPA React + Vite + Mantine
 packages/shared   esquemas Zod y tipos compartidos entre API y web
 packages/templates plantillas PDF (Anexo III, CV, hoja índice, separadores) con @react-pdf/renderer
 ```
+
+## Licencia
+
+Copyright (C) 2026 quercus-uex
+
+Este programa es software libre: puedes redistribuirlo y modificarlo bajo los términos de la
+GNU General Public License publicada por la Free Software Foundation, versión 3 o posterior.
+
+Se distribuye sin garantía alguna. Consulta el fichero `LICENSE` para más detalles.
