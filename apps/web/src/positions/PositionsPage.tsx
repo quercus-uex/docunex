@@ -72,7 +72,7 @@ export function PositionsPage() {
   });
 
   return (
-    <Stack maw={960}>
+    <Stack>
       <Group justify="space-between" align="flex-end">
         <Title order={2}>Plazas</Title>
         <Group gap="sm">
@@ -188,7 +188,7 @@ export function PositionsPage() {
                       <ActionIcon
                         variant="subtle"
                         color="gray"
-                        aria-label="Editar"
+                        aria-label={`Editar la plaza ${position.code}`}
                         onClick={() => setEditing(position)}
                       >
                         <IconEdit size={18} />
@@ -196,7 +196,7 @@ export function PositionsPage() {
                       <ActionIcon
                         variant="subtle"
                         color="red"
-                        aria-label="Eliminar"
+                        aria-label={`Eliminar la plaza ${position.code}`}
                         onClick={() => setDeleting(position)}
                       >
                         <IconTrash size={18} />

@@ -117,7 +117,7 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
 
   return (
     <form onSubmit={submit} noValidate>
-      <Stack maw={880}>
+      <Stack>
         <Group justify="space-between" align="flex-end">
           <Title order={2}>Perfil</Title>
           <Group>
@@ -143,86 +143,95 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
           </Alert>
         )}
 
-        <Section title="Datos personales">
-          <SimpleGrid cols={{ base: 1, sm: 2 }}>
-            <TextInput
-              label="Apellidos"
-              error={errors.lastNames?.message}
-              {...register('lastNames')}
-            />
-            <TextInput
-              label="Nombre"
-              error={errors.firstName?.message}
-              {...register('firstName')}
-            />
-            <TextInput label="DNI/NIE" error={errors.dni?.message} {...register('dni')} />
-            <Controller
-              control={control}
-              name="birthDate"
-              render={({ field }) => (
-                <DateInput
-                  label="Fecha de nacimiento"
-                  valueFormat="DD/MM/YYYY"
-                  clearable
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={errors.birthDate?.message}
-                />
-              )}
-            />
-            <TextInput
-              label="Correo electrónico"
-              type="email"
-              error={errors.email?.message}
-              {...register('email')}
-            />
-            <TextInput
-              label="Teléfono"
-              type="tel"
-              error={errors.phone?.message}
-              {...register('phone')}
-            />
-          </SimpleGrid>
-        </Section>
+        {/* En pantallas anchas las secciones cortas van de dos en dos. */}
+        <SimpleGrid cols={{ base: 1, xl: 2 }}>
+          <Section title="Datos personales">
+            <SimpleGrid cols={{ base: 1, sm: 2 }}>
+              <TextInput
+                label="Apellidos"
+                error={errors.lastNames?.message}
+                {...register('lastNames')}
+              />
+              <TextInput
+                label="Nombre"
+                error={errors.firstName?.message}
+                {...register('firstName')}
+              />
+              <TextInput label="DNI/NIE" error={errors.dni?.message} {...register('dni')} />
+              <Controller
+                control={control}
+                name="birthDate"
+                render={({ field }) => (
+                  <DateInput
+                    label="Fecha de nacimiento"
+                    valueFormat="DD/MM/YYYY"
+                    clearable
+                    value={field.value}
+                    onChange={field.onChange}
+                    error={errors.birthDate?.message}
+                  />
+                )}
+              />
+              <TextInput
+                label="Correo electrónico"
+                type="email"
+                error={errors.email?.message}
+                {...register('email')}
+              />
+              <TextInput
+                label="Teléfono"
+                type="tel"
+                error={errors.phone?.message}
+                {...register('phone')}
+              />
+            </SimpleGrid>
+          </Section>
 
-        <Section title="Domicilio">
-          <SimpleGrid cols={{ base: 1, sm: 2 }}>
-            <TextInput label="Domicilio" error={errors.address?.message} {...register('address')} />
-            <TextInput
-              label="Código postal"
-              inputMode="numeric"
-              error={errors.postalCode?.message}
-              {...register('postalCode')}
-            />
-            <TextInput label="Localidad" error={errors.city?.message} {...register('city')} />
-            <TextInput
-              label="Provincia"
-              error={errors.province?.message}
-              {...register('province')}
-            />
-          </SimpleGrid>
-        </Section>
+          <Section title="Domicilio">
+            <SimpleGrid cols={{ base: 1, sm: 2 }}>
+              <TextInput
+                label="Domicilio"
+                error={errors.address?.message}
+                {...register('address')}
+              />
+              <TextInput
+                label="Código postal"
+                inputMode="numeric"
+                error={errors.postalCode?.message}
+                {...register('postalCode')}
+              />
+              <TextInput label="Localidad" error={errors.city?.message} {...register('city')} />
+              <TextInput
+                label="Provincia"
+                error={errors.province?.message}
+                {...register('province')}
+              />
+            </SimpleGrid>
+          </Section>
+        </SimpleGrid>
 
-        <Section title="Titulación">
-          <TextInput
-            label="Titulación"
-            description="Tal como quieres que aparezca en el Anexo III."
-            error={errors.degree?.message}
-            {...register('degree')}
-          />
-        </Section>
+        <SimpleGrid cols={{ base: 1, xl: 2 }}>
+          <Section title="Titulación">
+            <TextInput
+              label="Titulación"
+              description="Tal como quieres que aparezca en el Anexo III."
+              error={errors.degree?.message}
+              {...register('degree')}
+            />
+          </Section>
 
-        <Section
-          title="Departamento"
-          description="Al buscar plazas en la web de la UEx se muestran primero las de tu departamento."
-        >
-          <TextInput
-            label="Departamento de la UEx"
-            placeholder="Ingeniería de Sistemas Informáticos y Telemáticos"
-            error={errors.department?.message}
-            {...register('department')}
-          />
-        </Section>
+          <Section
+            title="Departamento"
+            description="Al buscar plazas en la web de la UEx se muestran primero las de tu departamento."
+          >
+            <TextInput
+              label="Departamento de la UEx"
+              placeholder="Ingeniería de Sistemas Informáticos y Telemáticos"
+              error={errors.department?.message}
+              {...register('department')}
+            />
+          </Section>
+        </SimpleGrid>
 
         <Section title="Copia del DNI">
           <Controller
@@ -304,10 +313,12 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <Paper withBorder p="md">
-      <Stack gap="sm">
+    <Paper withBorder p="lg">
+      <Stack gap="md">
         <div>
-          <Title order={4}>{title}</Title>
+          <Title order={3} fz="h4">
+            {title}
+          </Title>
           {description && (
             <Text size="sm" c="dimmed">
               {description}

@@ -64,7 +64,7 @@ export function MeritEditPage() {
 
 function Problem({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <Stack maw={880}>
+    <Stack>
       <BackLink />
       <Alert color="red" title={title}>
         {children}
@@ -77,7 +77,7 @@ function BackLink() {
   return (
     <Anchor component={Link} to="/meritos" size="sm">
       <Group gap={4}>
-        <IconArrowLeft size={14} />
+        <IconArrowLeft size={18} />
         Méritos
       </Group>
     </Anchor>
@@ -148,7 +148,7 @@ function MeritEditor({ def, merit }: { def: AnyMeritTypeDef; merit: MeritDto | n
   return (
     <FormProvider {...form}>
       <form onSubmit={submit} noValidate>
-        <Stack maw={880}>
+        <Stack>
           <BackLink />
           <Group justify="space-between" align="flex-end">
             <div>

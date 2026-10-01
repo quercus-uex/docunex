@@ -260,7 +260,6 @@ function UexPositionsBrowser({ onDone }: { onDone: () => void }) {
                     // En `xs`, o con la etiqueta recortada, la virgulilla de la Ñ no se ve.
                     <Badge
                       ml="xs"
-                      size="sm"
                       color="gray"
                       variant="light"
                       styles={{ label: { overflow: 'visible' } }}
@@ -312,7 +311,6 @@ function UexPositionsBrowser({ onDone }: { onDone: () => void }) {
             <ActionIcon
               variant="subtle"
               color="gray"
-              size="sm"
               aria-label="Volver a consultar la web"
               loading={refresh.isPending}
               onClick={() =>

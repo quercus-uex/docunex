@@ -85,10 +85,10 @@ export function MeritsStep({
         </Text>
         {!locked && (
           <Group gap="xs">
-            <Button variant="subtle" size="xs" onClick={() => setSelected(merits.map((m) => m.id))}>
+            <Button variant="subtle" size="sm" onClick={() => setSelected(merits.map((m) => m.id))}>
               Todos
             </Button>
-            <Button variant="subtle" size="xs" onClick={() => setSelected([])}>
+            <Button variant="subtle" size="sm" onClick={() => setSelected([])}>
               Ninguno
             </Button>
           </Group>
@@ -109,7 +109,7 @@ export function MeritsStep({
           <Group gap="xs">
             <Title order={5}>{cvSectionHeading(section.code)}</Title>
             {section.single && chosen.length > 1 && (
-              <Badge color="yellow" variant="light" size="sm">
+              <Badge color="yellow" variant="light">
                 La plantilla prevé una sola entrada
               </Badge>
             )}
@@ -117,7 +117,7 @@ export function MeritsStep({
           {[...chosen, ...others].map((merit, index) => {
             const isChosen = index < chosen.length;
             return (
-              <Paper key={merit.id} withBorder px="sm" py={6} opacity={isChosen ? 1 : 0.6}>
+              <Paper key={merit.id} withBorder px="md" py="xs" opacity={isChosen ? 1 : 0.75}>
                 <Group wrap="nowrap" gap="sm">
                   <Checkbox
                     checked={isChosen}
@@ -134,7 +134,7 @@ export function MeritsStep({
                         {getMeritType(merit.type).label}
                       </Text>
                       {merit.documents.length === 0 && (
-                        <Badge color="red" variant="light" size="xs">
+                        <Badge color="red" variant="light">
                           Sin justificante
                         </Badge>
                       )}
@@ -145,7 +145,7 @@ export function MeritsStep({
                       <ActionIcon
                         variant="subtle"
                         color="gray"
-                        aria-label="Subir"
+                        aria-label={`Mover arriba ${merit.summary}`}
                         disabled={index === 0}
                         onClick={() => move(chosen, index, -1)}
                       >
@@ -154,7 +154,7 @@ export function MeritsStep({
                       <ActionIcon
                         variant="subtle"
                         color="gray"
-                        aria-label="Bajar"
+                        aria-label={`Mover abajo ${merit.summary}`}
                         disabled={index === chosen.length - 1}
                         onClick={() => move(chosen, index, 1)}
                       >

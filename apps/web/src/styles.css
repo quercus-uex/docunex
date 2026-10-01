@@ -1,0 +1,46 @@
+/*
+ * Estilos globales que complementan el tema de Mantine (theme.ts).
+ */
+
+/*
+ * Tamaño de letra base fluido: 16 px en portátiles y móviles, algo más en monitores grandes
+ * (~17,5 px a 1920 px y hasta 19 px a partir de ~2300 px). Mantine mide casi todo en `rem`, así que
+ * textos, botones, campos y márgenes crecen a la vez y la aplicación no se ve diminuta en pantallas
+ * anchas. Parte de `100%` para respetar el tamaño de letra que haya elegido el usuario en el
+ * navegador.
+ */
+html {
+  font-size: clamp(100%, 0.625rem + 0.4vw, 118.75%);
+}
+
+/* Anillo de foco más grueso y visible al navegar con teclado. */
+.mantine-focus-auto:focus-visible,
+.mantine-focus-always:focus {
+  outline: 3px solid var(--mantine-primary-color-filled);
+  outline-offset: 2px;
+}
+
+/* Los campos de texto solo cambiaban el color del borde (1 px) al enfocarse: se refuerza. */
+.mantine-Input-input:focus,
+.mantine-Input-input:focus-within {
+  box-shadow: 0 0 0 2px var(--input-bd);
+}
+
+/* Enlace para saltar la navegación con el teclado; solo aparece al recibir el foco. */
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--mantine-radius-md);
+  background: var(--mantine-primary-color-filled);
+  color: var(--mantine-color-white);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}

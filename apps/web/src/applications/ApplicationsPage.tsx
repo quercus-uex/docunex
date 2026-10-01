@@ -28,7 +28,7 @@ export function ApplicationsPage() {
   const [creating, setCreating] = useState(false);
 
   return (
-    <Stack maw={960}>
+    <Stack>
       <Group justify="space-between" align="flex-end">
         <Title order={2}>Solicitudes</Title>
         <Button leftSection={<IconPlus size={16} />} onClick={() => setCreating(true)}>
