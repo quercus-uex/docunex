@@ -13,3 +13,5 @@ export * from './applications.js';
 export * from './positions.js';
 export * from './registry.js';
 export * from './validation.js';
+export * from './scoring/index.js';
+export * from './uex-positions.js';

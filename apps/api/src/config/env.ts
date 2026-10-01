@@ -1,3 +1,4 @@
+import { UEX_PCI_LISTING_URL } from '@docunex/shared';
 import { z } from 'zod';
 
 export const envSchema = z.object({
@@ -8,6 +9,8 @@ export const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
   COOKIE_SECURE: z.stringbool().default(false),
   STORAGE_DIR: z.string().min(1).default('./data/storage'),
+  /** Página de convocatorias PCI de la UEx de la que se leen las plazas. */
+  UEX_PCI_URL: z.url().default(UEX_PCI_LISTING_URL),
 });
 
 export type Env = z.infer<typeof envSchema>;

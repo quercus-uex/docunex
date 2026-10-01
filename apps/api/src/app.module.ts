@@ -13,6 +13,7 @@ import { MeritsModule } from './merits/merits.module.js';
 import { PositionsModule } from './positions/positions.module.js';
 import { ProfileModule } from './profile/profile.module.js';
 import { StorageModule } from './storage/storage.module.js';
+import { UexModule } from './uex/uex.module.js';
 import { UsersModule } from './users/users.module.js';
 
 @Module({
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module.js';
     PositionsModule,
     GenerationModule,
     ApplicationsModule,
+    UexModule,
     HiringModule,
   ],
   controllers: [HealthController],

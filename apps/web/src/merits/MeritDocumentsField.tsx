@@ -98,9 +98,9 @@ export function MeritDocumentsField({
         value.map((id, index) => {
           const document = byId.get(id);
           return (
-            <Paper key={id} withBorder px="sm" py={6}>
+            <Paper key={id} withBorder px="md" py="xs">
               <Group wrap="nowrap" gap="sm">
-                <Text size="sm" c="dimmed" w={20}>
+                <Text size="sm" c="dimmed" w={24}>
                   {index + 1}.
                 </Text>
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -125,7 +125,7 @@ export function MeritDocumentsField({
                     <ActionIcon
                       variant="subtle"
                       color="gray"
-                      aria-label="Subir"
+                      aria-label={`Mover arriba ${document?.name ?? 'el documento'}`}
                       disabled={index === 0}
                       onClick={() => move(index, -1)}
                     >
@@ -134,7 +134,7 @@ export function MeritDocumentsField({
                     <ActionIcon
                       variant="subtle"
                       color="gray"
-                      aria-label="Bajar"
+                      aria-label={`Mover abajo ${document?.name ?? 'el documento'}`}
                       disabled={index === value.length - 1}
                       onClick={() => move(index, 1)}
                     >
@@ -143,7 +143,7 @@ export function MeritDocumentsField({
                     <ActionIcon
                       variant="subtle"
                       color="gray"
-                      aria-label="Editar nombre"
+                      aria-label={`Editar el nombre de ${document?.name ?? 'el documento'}`}
                       disabled={!document}
                       onClick={() => document && setEditing(document)}
                     >
@@ -152,7 +152,7 @@ export function MeritDocumentsField({
                     <ActionIcon
                       variant="subtle"
                       color="red"
-                      aria-label="Quitar"
+                      aria-label={`Quitar ${document?.name ?? 'el documento'}`}
                       onClick={() => onChange(value.filter((other) => other !== id))}
                     >
                       <IconX size={16} />

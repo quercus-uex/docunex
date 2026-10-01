@@ -6,13 +6,21 @@ Investigador (PCI) de la Universidad de Extremadura.
 ## Qué hace
 
 - **Plazas:** guarda las plazas a las que te presentas (código, título y fecha de resolución).
+  Con «Buscar en la UEx» se listan las plazas publicadas en la
+  [página de convocatorias PCI](https://rrhhinvestigacion.unex.es/funciones/concursos/convocatorias-pci/),
+  filtradas por el departamento de tu perfil, y se añaden con un clic. La aplicación muestra en qué
+  fase está cada una (Convocatoria, Acta 1 o Acta 2) y la actualiza al volver a consultar la web.
 - **Documentos:** sube tu DNI, los justificantes y los demás documentos una sola vez. Se
   normalizan a PDF y se reutilizan en todas las solicitudes.
 - **Méritos:** mantiene un catálogo de méritos del CV, cada uno con sus justificantes.
+- **Puntuación:** clasifica los méritos por los apartados del baremo de PCI (anexo I de la
+  normativa de contratación de la UEx, DOE nº 143 de 27/07/2021) y estima la puntuación ponderada
+  como un intervalo: lo que suma seguro (idiomas, otros másteres y titulaciones) y el máximo si la
+  comisión lo valora todo. Se ve en Méritos y, con los méritos elegidos, en cada solicitud.
 - **Solicitudes:** un asistente de seis pasos para cada plaza:
   1. Plaza, fecha de la solicitud y los textos «Expone» y «Solicita» de RedSara.
   2. Documentos que exige la convocatoria.
-  3. Méritos que se incluyen y en qué orden.
+  3. Méritos que se incluyen y en qué orden, con la puntuación estimada.
   4. Validación: documentos que faltan y estimación del tamaño.
   5. Generación del expediente en un único PDF: Anexo III, CV, hoja índice, separadores y
      justificantes numerados. Si pasa de 10 MB (el límite de RedSara por fichero), se recomprimen

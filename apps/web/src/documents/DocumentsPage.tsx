@@ -76,7 +76,7 @@ export function DocumentsPage() {
   return (
     <Stack>
       <Title order={2}>Documentos</Title>
-      <Text c="dimmed" maw={760}>
+      <Text c="dimmed" maw={960}>
         Aquí están todos tus documentos acreditativos. Cada uno se convierte a PDF para poder
         incluirlo en el expediente. Súbelos una sola vez: después los vincularás a tus méritos y los
         reutilizarás en todas las solicitudes.
@@ -84,7 +84,7 @@ export function DocumentsPage() {
 
       <UploadDropzone />
 
-      <Alert variant="light" color="gray" maw={760}>
+      <Alert variant="light" color="gray">
         Al combinar los justificantes en el PDF único del expediente, las firmas digitales
         incrustadas en ellos dejan de poder verificarse. Los códigos de verificación (CSV) impresos
         en las páginas se conservan.
@@ -96,7 +96,8 @@ export function DocumentsPage() {
           leftSection={<IconSearch size={16} />}
           value={search}
           onChange={(event) => setSearch(event.currentTarget.value)}
-          w={260}
+          w={{ base: '100%', xs: 320 }}
+          aria-label="Buscar documentos por nombre"
         />
         <Select
           placeholder="Todos los tipos"
@@ -104,7 +105,8 @@ export function DocumentsPage() {
           value={kind}
           onChange={(value) => setKind(value as DocumentKind | null)}
           clearable
-          w={240}
+          w={{ base: '100%', xs: 280 }}
+          aria-label="Filtrar por tipo de documento"
         />
         <Checkbox
           label="Solo sin uso"
@@ -209,7 +211,7 @@ function DocumentRow({
       <Table.Td>
         <Menu position="bottom-end" withinPortal>
           <Menu.Target>
-            <ActionIcon variant="subtle" color="gray" aria-label="Acciones">
+            <ActionIcon variant="subtle" color="gray" aria-label={`Acciones de ${document.name}`}>
               <IconDots size={18} />
             </ActionIcon>
           </Menu.Target>

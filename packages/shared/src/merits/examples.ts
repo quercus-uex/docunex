@@ -36,7 +36,7 @@ export const MERIT_EXAMPLES: MeritExamples = {
     international: true,
   },
   master: { name: 'Máster Universitario en Ciencia de Datos', credits: 60 },
-  teacher_training: {},
+  teacher_training: { credits: 15 },
   other_degree: {
     degree: 'Grado en Matemáticas',
     honors: null,

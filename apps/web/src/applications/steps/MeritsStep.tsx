@@ -20,9 +20,12 @@ import {
   Title,
 } from '@mantine/core';
 import { IconArrowDown, IconArrowUp } from '@tabler/icons-react';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { useMerits } from '../../merits/api';
+import { MeritScoreBadge } from '../../scoring/MeritScoreBadge';
+import { ScoreSummaryCard } from '../../scoring/ScoreSummaryCard';
+import { useMeritScore } from '../../scoring/useMeritScore';
 import { useSetApplicationMerits } from '../api';
 import { SaveIndicator } from '../SaveIndicator';
 import { useAutoSave } from '../useAutoSave';
@@ -43,6 +46,14 @@ export function MeritsStep({
   const [selected, setSelected] = useState(application.meritIds);
   const save = useSetApplicationMerits(application.id);
   const state = useAutoSave(selected, (ids) => save.mutateAsync(ids));
+  const referenceDate = application.position.deadline ?? application.applicationDate;
+  const chosenMerits = useMemo(() => {
+    if (!merits) return undefined;
+    const ids = new Set(selected);
+    return merits.filter((merit) => ids.has(merit.id));
+  }, [merits, selected]);
+  const score = useMeritScore(chosenMerits, { referenceDate });
+  const allScore = useMeritScore(merits, { referenceDate });
 
   if (isPending || !merits) {
     return (
@@ -85,15 +96,28 @@ export function MeritsStep({
         </Text>
         {!locked && (
           <Group gap="xs">
-            <Button variant="subtle" size="xs" onClick={() => setSelected(merits.map((m) => m.id))}>
+            <Button variant="subtle" size="sm" onClick={() => setSelected(merits.map((m) => m.id))}>
               Todos
             </Button>
-            <Button variant="subtle" size="xs" onClick={() => setSelected([])}>
+            <Button variant="subtle" size="sm" onClick={() => setSelected([])}>
               Ninguno
             </Button>
           </Group>
         )}
       </Group>
+
+      {score && (
+        <ScoreSummaryCard
+          summary={score}
+          description={`Con los méritos seleccionados; los periodos se cuentan hasta ${
+            application.position.deadline
+              ? 'el fin del plazo de la plaza'
+              : application.applicationDate
+                ? 'la fecha de la solicitud'
+                : 'hoy'
+          }. Los que no marques no suman.`}
+        />
+      )}
 
       {sections.length === 0 && (
         <Text c="dimmed">
@@ -109,15 +133,17 @@ export function MeritsStep({
           <Group gap="xs">
             <Title order={5}>{cvSectionHeading(section.code)}</Title>
             {section.single && chosen.length > 1 && (
-              <Badge color="yellow" variant="light" size="sm">
+              <Badge color="yellow" variant="light">
                 La plantilla prevé una sola entrada
               </Badge>
             )}
           </Group>
           {[...chosen, ...others].map((merit, index) => {
             const isChosen = index < chosen.length;
+            // Los no seleccionados muestran lo que sumarían (calculado con todos los méritos).
+            const rowScore = isChosen ? score : allScore;
             return (
-              <Paper key={merit.id} withBorder px="sm" py={6} opacity={isChosen ? 1 : 0.6}>
+              <Paper key={merit.id} withBorder px="md" py="xs" opacity={isChosen ? 1 : 0.75}>
                 <Group wrap="nowrap" gap="sm">
                   <Checkbox
                     checked={isChosen}
@@ -133,8 +159,17 @@ export function MeritsStep({
                       <Text size="xs" c="dimmed">
                         {getMeritType(merit.type).label}
                       </Text>
+                      {rowScore && (
+                        <MeritScoreBadge
+                          score={rowScore.byMerit.get(merit.id)}
+                          baremo={rowScore.baremo}
+                          unscoredReason={
+                            rowScore.unscored.find((u) => u.meritId === merit.id)?.reason
+                          }
+                        />
+                      )}
                       {merit.documents.length === 0 && (
-                        <Badge color="red" variant="light" size="xs">
+                        <Badge color="red" variant="light">
                           Sin justificante
                         </Badge>
                       )}
@@ -145,7 +180,7 @@ export function MeritsStep({
                       <ActionIcon
                         variant="subtle"
                         color="gray"
-                        aria-label="Subir"
+                        aria-label={`Mover arriba ${merit.summary}`}
                         disabled={index === 0}
                         onClick={() => move(chosen, index, -1)}
                       >
@@ -154,7 +189,7 @@ export function MeritsStep({
                       <ActionIcon
                         variant="subtle"
                         color="gray"
-                        aria-label="Bajar"
+                        aria-label={`Mover abajo ${merit.summary}`}
                         disabled={index === chosen.length - 1}
                         onClick={() => move(chosen, index, 1)}
                       >

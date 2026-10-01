@@ -89,6 +89,7 @@ function toProfileDto(profile: Profile | null, verifications: DegreeVerification
     email: profile?.email ?? null,
     phone: profile?.phone ?? null,
     degree: profile?.degree ?? null,
+    department: profile?.department ?? null,
     idDocumentId: profile?.idDocumentId ?? null,
     degreeVerifications: verifications.map(({ id, degreeName, code }) => ({
       id,

@@ -306,8 +306,8 @@ function RegistrationSummary({
           <Group gap="xs">
             <Button
               variant="default"
-              size="xs"
-              leftSection={<IconEdit size={14} />}
+              size="sm"
+              leftSection={<IconEdit size={16} />}
               onClick={() => setEditing(true)}
             >
               Corregir
@@ -315,8 +315,8 @@ function RegistrationSummary({
             {closed ? (
               <Button
                 variant="default"
-                size="xs"
-                leftSection={<IconLockOpen size={14} />}
+                size="sm"
+                leftSection={<IconLockOpen size={16} />}
                 loading={setStatus.isPending}
                 onClick={() => change('registered')}
               >
@@ -325,8 +325,8 @@ function RegistrationSummary({
             ) : (
               <Button
                 variant="default"
-                size="xs"
-                leftSection={<IconLock size={14} />}
+                size="sm"
+                leftSection={<IconLock size={16} />}
                 loading={setStatus.isPending}
                 onClick={() => change('closed')}
               >
