@@ -6,16 +6,19 @@ import { Application } from '../applications/application.entity.js';
 import { isUniqueViolation } from '../common/database-errors.js';
 import { Position } from './position.entity.js';
 
-function toPositionDto(position: Position, applications: number): PositionDto {
+export function toPositionDto(position: Position, applications: number): PositionDto {
   return {
     id: position.id,
     code: position.code,
     resolutionDate: position.resolutionDate,
     title: position.title,
     area: position.area,
+    department: position.department,
+    center: position.center,
     deadline: position.deadline,
     notes: position.notes,
     applications,
+    uexStatus: position.uexStatus,
     createdAt: position.createdAt.toISOString(),
     updatedAt: position.updatedAt.toISOString(),
   };

@@ -6,6 +6,10 @@ Investigador (PCI) de la Universidad de Extremadura.
 ## Qué hace
 
 - **Plazas:** guarda las plazas a las que te presentas (código, título y fecha de resolución).
+  Con «Buscar en la UEx» se listan las plazas publicadas en la
+  [página de convocatorias PCI](https://rrhhinvestigacion.unex.es/funciones/concursos/convocatorias-pci/),
+  filtradas por el departamento de tu perfil, y se añaden con un clic. La aplicación muestra en qué
+  fase está cada una (Convocatoria, Acta 1 o Acta 2) y la actualiza al volver a consultar la web.
 - **Documentos:** sube tu DNI, los justificantes y los demás documentos una sola vez. Se
   normalizan a PDF y se reutilizan en todas las solicitudes.
 - **Méritos:** mantiene un catálogo de méritos del CV, cada uno con sus justificantes.

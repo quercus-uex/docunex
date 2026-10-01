@@ -72,6 +72,7 @@ function toFormValues(profile: ProfileDto): ProfileInput {
     email: profile.email ?? '',
     phone: profile.phone ?? '',
     degree: profile.degree ?? '',
+    department: profile.department ?? '',
     idDocumentId: profile.idDocumentId,
     degreeVerifications: profile.degreeVerifications.map(({ degreeName, code }) => ({
       degreeName,
@@ -208,6 +209,18 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
             description="Tal como quieres que aparezca en el Anexo III."
             error={errors.degree?.message}
             {...register('degree')}
+          />
+        </Section>
+
+        <Section
+          title="Departamento"
+          description="Al buscar plazas en la web de la UEx se muestran primero las de tu departamento."
+        >
+          <TextInput
+            label="Departamento de la UEx"
+            placeholder="Ingeniería de Sistemas Informáticos y Telemáticos"
+            error={errors.department?.message}
+            {...register('department')}
           />
         </Section>
 
