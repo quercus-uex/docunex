@@ -93,7 +93,6 @@ export function ScoreSummaryCard({
         <Group justify="space-between">
           <Button
             variant="subtle"
-            px={0}
             onClick={() => setExpanded((value) => !value)}
             rightSection={expanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
           >
