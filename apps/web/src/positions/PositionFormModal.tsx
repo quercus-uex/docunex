@@ -13,6 +13,8 @@ const EMPTY: PositionInput = {
   resolutionDate: null,
   title: '',
   area: '',
+  department: '',
+  center: '',
   deadline: null,
   notes: '',
 };
@@ -24,6 +26,8 @@ function toFormValues(position: PositionDto | null): PositionInput {
     resolutionDate: position.resolutionDate,
     title: position.title ?? '',
     area: position.area ?? '',
+    department: position.department ?? '',
+    center: position.center ?? '',
     deadline: position.deadline,
     notes: position.notes ?? '',
   };
@@ -138,6 +142,12 @@ function PositionForm({
           {dateField('resolutionDate', 'Fecha de resolución', 'La del Anexo III')}
           <TextInput label="Denominación" error={errors.title?.message} {...register('title')} />
           <TextInput label="Área" error={errors.area?.message} {...register('area')} />
+          <TextInput
+            label="Departamento"
+            error={errors.department?.message}
+            {...register('department')}
+          />
+          <TextInput label="Centro" error={errors.center?.message} {...register('center')} />
           {dateField('deadline', 'Fin del plazo')}
         </SimpleGrid>
         <Textarea

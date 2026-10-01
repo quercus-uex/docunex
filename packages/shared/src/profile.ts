@@ -30,6 +30,8 @@ export const profileInputSchema = z.object({
     z.string().regex(/^\+?[\d\s]{9,20}$/, 'Teléfono no válido (solo dígitos, espacios y +)'),
   ),
   degree: nullableText(255),
+  /** Departamento de la UEx: filtra las plazas que se buscan en la web de la universidad. */
+  department: nullableText(255).optional().default(null),
   idDocumentId: z.uuid().nullable(),
   degreeVerifications: z
     .array(degreeVerificationSchema)

@@ -182,7 +182,7 @@ function PackageResult({ pkg }: { pkg: PackageDto }) {
                   )}
                 </Table.Td>
                 <Table.Td>
-                  <Badge variant="light" color={document.block === 5 ? 'grape' : 'blue'} size="sm">
+                  <Badge variant="light" color={document.block === 5 ? 'grape' : 'blue'}>
                     {document.block === 5 ? 'Requisitos' : 'Méritos'}
                   </Badge>
                 </Table.Td>
