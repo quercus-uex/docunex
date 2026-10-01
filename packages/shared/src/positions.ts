@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateSchema, nullableFormat, nullableText } from './common.js';
+import type { PositionUexStatus } from './uex-positions.js';
 
 /** Identificador de una plaza PCI: `IN` + 6 dígitos. */
 export const POSITION_CODE_PATTERN = /^IN\d{6}$/;
@@ -17,6 +18,8 @@ export const positionInputSchema = z.object({
   resolutionDate: nullableFormat(isoDateSchema),
   title: nullableText(255),
   area: nullableText(255),
+  department: nullableText(255).optional().default(null),
+  center: nullableText(255).optional().default(null),
   /** Fin del plazo de presentación. */
   deadline: nullableFormat(isoDateSchema),
   notes: nullableText(2000),
@@ -29,6 +32,8 @@ export interface PositionDto extends PositionData {
   id: string;
   /** Solicitudes hechas para esta plaza. */
   applications: number;
+  /** Última consulta a la web de la UEx; `null` si la plaza no se ha encontrado nunca allí. */
+  uexStatus: PositionUexStatus | null;
   createdAt: string;
   updatedAt: string;
 }

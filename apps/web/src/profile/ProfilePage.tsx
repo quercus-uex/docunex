@@ -72,6 +72,7 @@ function toFormValues(profile: ProfileDto): ProfileInput {
     email: profile.email ?? '',
     phone: profile.phone ?? '',
     degree: profile.degree ?? '',
+    department: profile.department ?? '',
     idDocumentId: profile.idDocumentId,
     degreeVerifications: profile.degreeVerifications.map(({ degreeName, code }) => ({
       degreeName,
@@ -219,20 +220,32 @@ function ProfileForm({ profile }: { profile: ProfileDto }) {
             />
           </Section>
 
-          <Section title="Copia del DNI">
-            <Controller
-              control={control}
-              name="idDocumentId"
-              render={({ field }) => (
-                <IdDocumentField
-                  value={field.value}
-                  onChange={(id) => setValue('idDocumentId', id, { shouldDirty: true })}
-                  error={errors.idDocumentId?.message}
-                />
-              )}
+          <Section
+            title="Departamento"
+            description="Al buscar plazas en la web de la UEx se muestran primero las de tu departamento."
+          >
+            <TextInput
+              label="Departamento de la UEx"
+              placeholder="Ingeniería de Sistemas Informáticos y Telemáticos"
+              error={errors.department?.message}
+              {...register('department')}
             />
           </Section>
         </SimpleGrid>
+
+        <Section title="Copia del DNI">
+          <Controller
+            control={control}
+            name="idDocumentId"
+            render={({ field }) => (
+              <IdDocumentField
+                value={field.value}
+                onChange={(id) => setValue('idDocumentId', id, { shouldDirty: true })}
+                error={errors.idDocumentId?.message}
+              />
+            )}
+          />
+        </Section>
 
         <Section
           title="Verificación de títulos"

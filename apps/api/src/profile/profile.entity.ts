@@ -56,6 +56,10 @@ export class Profile {
   @Column({ type: 'varchar', length: 255, nullable: true })
   degree: string | null;
 
+  /** Departamento de la UEx, para filtrar las plazas de la web de la universidad. */
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  department: string | null;
+
   /** Copia del DNI (bloque 2 del expediente). */
   @Column({ type: 'uuid', nullable: true })
   idDocumentId: string | null;

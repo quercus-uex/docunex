@@ -3,6 +3,7 @@ import { DocumentsAndProfile1790605530003 } from './1790605530003-DocumentsAndPr
 import { Merits1790606991009 } from './1790606991009-Merits.js';
 import { Applications1790622595798 } from './1790622595798-Applications.js';
 import { Registry1790624635828 } from './1790624635828-Registry.js';
+import { UexPositions1790757231513 } from './1790757231513-UexPositions.js';
 
 /** Todas las migraciones, en orden. Añade aquí cada migración generada. */
 export const migrations: Function[] = [
@@ -11,4 +12,5 @@ export const migrations: Function[] = [
   Merits1790606991009,
   Applications1790622595798,
   Registry1790624635828,
+  UexPositions1790757231513,
 ];
