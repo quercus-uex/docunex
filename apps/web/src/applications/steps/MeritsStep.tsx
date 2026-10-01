@@ -161,7 +161,6 @@ export function MeritsStep({
                       </Text>
                       {rowScore && (
                         <MeritScoreBadge
-                          size="xs"
                           score={rowScore.byMerit.get(merit.id)}
                           baremo={rowScore.baremo}
                           unscoredReason={

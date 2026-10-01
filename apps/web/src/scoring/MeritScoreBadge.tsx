@@ -6,12 +6,13 @@ export function MeritScoreBadge({
   score,
   baremo,
   unscoredReason,
-  size = 'sm',
+  size,
 }: {
   score: MeritScore | undefined;
   baremo: Baremo;
   unscoredReason?: string | undefined;
-  size?: 'xs' | 'sm';
+  /** Por defecto, el del tema. */
+  size?: 'sm' | 'md';
 }) {
   if (!score) {
     if (!unscoredReason) return null;

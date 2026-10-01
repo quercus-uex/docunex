@@ -61,7 +61,7 @@ export function BaremoModal({
                         {item.label} {item.title}
                       </Text>
                       <Badge
-                        size="xs"
+                        size="md"
                         variant="light"
                         color={item.profileIndependent ? 'teal' : 'blue'}
                       >

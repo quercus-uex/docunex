@@ -93,14 +93,13 @@ export function ScoreSummaryCard({
         <Group justify="space-between">
           <Button
             variant="subtle"
-            size="xs"
             px={0}
             onClick={() => setExpanded((value) => !value)}
-            rightSection={expanded ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+            rightSection={expanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />}
           >
             {expanded ? 'Ocultar el desglose' : 'Desglose por apartados'}
           </Button>
-          <Button variant="subtle" size="xs" onClick={() => setShowBaremo(true)}>
+          <Button variant="subtle" onClick={() => setShowBaremo(true)}>
             Ver el baremo
           </Button>
         </Group>
@@ -167,7 +166,7 @@ function SectionBreakdown({
             {score.section.id}. {score.section.title}
           </Title>
           <Tooltip label={`Ponderación del apartado para plazas ${positionKind}`} withArrow>
-            <Badge variant="outline" color="gray" size="sm" style={{ textTransform: 'none' }}>
+            <Badge variant="outline" color="gray" style={{ textTransform: 'none' }}>
               × {formatPoints(score.section.weight)}
             </Badge>
           </Tooltip>
@@ -204,7 +203,7 @@ function SectionBreakdown({
                       </span>
                     </Tooltip>
                     {item.profileIndependent && (
-                      <Badge ml={6} size="xs" color="teal" variant="light">
+                      <Badge ml={6} size="md" color="teal" variant="light">
                         Directo
                       </Badge>
                     )}
@@ -213,7 +212,7 @@ function SectionBreakdown({
                         label={item.caps?.map((cap) => cap.label).join(' · ') ?? 'Solo una entrada'}
                         withArrow
                       >
-                        <Badge ml={6} size="xs" color="yellow" variant="light">
+                        <Badge ml={6} size="md" color="yellow" variant="light">
                           Tope
                         </Badge>
                       </Tooltip>
