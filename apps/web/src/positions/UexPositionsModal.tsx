@@ -257,7 +257,14 @@ function UexPositionsBrowser({ onDone }: { onDone: () => void }) {
                 <Table.Td fw={600}>
                   {position.code}
                   {position.positionId && (
-                    <Badge ml="xs" size="xs" color="gray" variant="light">
+                    // En `xs`, o con la etiqueta recortada, la virgulilla de la Ñ no se ve.
+                    <Badge
+                      ml="xs"
+                      size="sm"
+                      color="gray"
+                      variant="light"
+                      styles={{ label: { overflow: 'visible' } }}
+                    >
                       Añadida
                     </Badge>
                   )}

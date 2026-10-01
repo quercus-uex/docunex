@@ -35,6 +35,9 @@ describe('parseApplicationDeadline', () => {
         'FIN DE PLAZO DE PRESENTACION DE SOLICITUDES 9 de Septiembre de 2026',
       ),
     ).toBe('2026-09-09');
+    expect(parseApplicationDeadline('Fin de plazo de solicitudes: 25 de septiembre de 2026')).toBe(
+      '2026-09-25',
+    );
   });
 
   it('ignora otros plazos y los textos sin fecha', () => {

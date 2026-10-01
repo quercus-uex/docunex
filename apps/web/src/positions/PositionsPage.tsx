@@ -40,7 +40,6 @@ export function PositionsPage() {
   const [deleting, setDeleting] = useState<PositionDto | null>(null);
   const [browsing, setBrowsing] = useState(false);
   const sync = useSyncUexPositions();
-  const tracked = positions?.some((position) => position.uexStatus !== null) ?? false;
 
   const syncStatuses = (quiet: boolean) =>
     sync.mutate(undefined, {
@@ -77,7 +76,8 @@ export function PositionsPage() {
       <Group justify="space-between" align="flex-end">
         <Title order={2}>Plazas</Title>
         <Group gap="sm">
-          {tracked && (
+          {/* También con plazas añadidas a mano: la consulta las busca por su código. */}
+          {positions && positions.length > 0 && (
             <Tooltip label="Consulta en la web de la UEx en qué fase está cada plaza">
               <Button
                 variant="default"

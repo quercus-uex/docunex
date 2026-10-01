@@ -93,12 +93,12 @@ function stripAccents(value: string): string {
 
 /**
  * Fin del plazo de solicitudes en el texto de «Observaciones», p. ej. «Fin de plazo de presentación
- * de solicitudes: 01 de octubre de 2026» → `2026-10-01`. Otros plazos (reclamaciones) no cuentan.
+ * de solicitudes: 01 de octubre de 2026» → `2026-10-01` (también «Fin de plazo de solicitudes: ...»). Otros plazos (reclamaciones) no cuentan.
  */
 export function parseApplicationDeadline(observations: string | null): string | null {
   if (!observations) return null;
   const match =
-    /presentacion de solicitudes[^:\d]*:?\s*(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})/.exec(
+    /plazo (?:de presentacion )?de solicitudes[^:\d]*:?\s*(\d{1,2})\s+de\s+([a-z]+)\s+de\s+(\d{4})/.exec(
       stripAccents(observations).toLowerCase(),
     );
   if (!match) return null;
