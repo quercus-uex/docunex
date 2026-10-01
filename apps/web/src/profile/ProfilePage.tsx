@@ -57,7 +57,7 @@ export function ProfilePage() {
     );
   }
   return (
-    <Stack maw={880}>
+    <Stack>
       <ProfileForm profile={profile} />
       <Section
         title="Datos para la contratación (segunda fase)"

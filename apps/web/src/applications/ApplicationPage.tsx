@@ -14,6 +14,7 @@ import {
   Title,
   useMatches,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconArrowLeft, IconLock, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -88,10 +89,11 @@ function Wizard({ application, open }: { application: ApplicationDto; open?: Ini
   const next = () => setStep((s) => Math.min(HIRING_STEP, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
   const props = { application, locked, onNext: next, onBack: back };
-  // Los seis pasos en horizontal no caben en pantallas estrechas: ahí se apilan en vertical, y en
-  // las intermedias se compactan un poco para que quepan en una sola fila.
-  const orientation = useMatches<'horizontal' | 'vertical'>({ base: 'vertical', lg: 'horizontal' });
-  const stepperSize = useMatches<MantineSize>({ base: 'md', lg: 'sm', xl: 'md' });
+  // Los siete pasos en horizontal solo caben en una fila en pantallas anchas: por debajo se apilan
+  // en vertical, y en las intermedias se compactan un poco.
+  const orientation = useMatches<'horizontal' | 'vertical'>({ base: 'vertical', xl: 'horizontal' });
+  const wide = useMediaQuery('(min-width: 96em)');
+  const stepperSize: MantineSize = orientation === 'horizontal' && !wide ? 'sm' : 'md';
 
   return (
     <Stack>

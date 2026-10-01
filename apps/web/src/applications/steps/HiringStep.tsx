@@ -338,7 +338,7 @@ function HiringDocumentItem({
                   {index + 1}. {item.label}
                 </Text>
                 {!required && (
-                  <Badge size="xs" variant="outline" color="gray">
+                  <Badge size="md" variant="outline" color="gray">
                     Si procede
                   </Badge>
                 )}
@@ -365,7 +365,7 @@ function HiringDocumentItem({
         />
         {!readOnly && usable.length > 0 && value.length === 0 && (
           <Group>
-            <Button size="xs" variant="light" onClick={() => onChange([...value, ...usable])}>
+            <Button variant="light" onClick={() => onChange([...value, ...usable])}>
               {suggestion!.label}
             </Button>
           </Group>

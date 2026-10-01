@@ -102,7 +102,7 @@ function ApplicationRow({ application }: { application: ApplicationDto }) {
           <Anchor
             component={Link}
             to={`/solicitudes/${application.id}/contratacion`}
-            size="xs"
+            size="sm"
             c={application.hiring.complete ? 'green' : undefined}
           >
             Fase 2:{' '}
