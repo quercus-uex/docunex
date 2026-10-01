@@ -4,6 +4,7 @@ import {
   IconAward,
   IconFiles,
   IconSend,
+  IconSignature,
   IconUser,
   type TablerIcon,
 } from '@tabler/icons-react';
@@ -93,6 +94,22 @@ export function HomePage() {
           </Paper>
         ))}
       </SimpleGrid>
+      <Paper withBorder p="xl">
+        <Group gap="md" wrap="nowrap" align="flex-start">
+          <ThemeIcon size={48} radius="md" variant="light" color="teal" aria-hidden>
+            <IconSignature size={28} stroke={1.75} />
+          </ThemeIcon>
+          <div>
+            <Title order={3} fz="h4" mb="xs">
+              Si te seleccionan: segunda fase
+            </Title>
+            <Text c="dimmed">
+              Prepara en la misma solicitud los datos para el contrato (cuenta bancaria, Seguridad
+              Social…) y los documentos para formalizarlo.
+            </Text>
+          </div>
+        </Group>
+      </Paper>
     </Stack>
   );
 }

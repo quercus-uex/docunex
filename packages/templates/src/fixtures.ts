@@ -8,7 +8,13 @@ import {
   PACKAGE_BLOCKS,
 } from '@docunex/shared';
 import { buildCvModel, type CvMeritInput, type CvModel } from './cv/model.js';
-import type { AnnexIIIModel, Applicant, IndexSheetModel, SeparatorModel } from './models.js';
+import type {
+  AnnexIIIModel,
+  Applicant,
+  HiringSheetModel,
+  IndexSheetModel,
+  SeparatorModel,
+} from './models.js';
 
 /**
  * Datos de ejemplo para `pnpm templates:preview` y las pruebas. La persona es ficticia.
@@ -232,3 +238,35 @@ export const EXAMPLE_SEPARATORS: SeparatorModel[] = PACKAGE_BLOCKS.slice(1).map(
   number: block.number,
   title: block.title,
 }));
+
+/** Portada de la segunda fase: con documentos en casi todas las entradas y una sin aportar. */
+export const EXAMPLE_HIRING: HiringSheetModel = {
+  applicant: (({ degree: _degree, ...applicant }) => applicant)(EXAMPLE_APPLICANT),
+  hiring: {
+    iban: 'ES9121000418450200051332',
+    socialSecurityNumber: '281234567840',
+    nationality: 'Española',
+    birthPlace: 'Cáceres',
+  },
+  positionCode: POSITION_CODE,
+  positionTitle: 'Investigador/a en inteligencia artificial',
+  registryNumber: 'REGAGE26e00012345678',
+  date: DATE,
+  entries: [
+    {
+      label: 'DNI, NIE o pasaporte',
+      required: true,
+      documents: [
+        { name: 'DNI (anverso)', page: 2 },
+        { name: 'DNI (reverso)', page: 3 },
+      ],
+    },
+    {
+      label: 'Certificado de titularidad de la cuenta bancaria',
+      required: true,
+      documents: [{ name: 'Certificado de titularidad', page: 4 }],
+    },
+    { label: 'Modelo 145 del IRPF', required: true, documents: [] },
+    { label: 'Autorización de residencia y trabajo', required: false, documents: [] },
+  ],
+};

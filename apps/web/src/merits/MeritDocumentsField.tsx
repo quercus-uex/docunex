@@ -32,6 +32,7 @@ export function MeritDocumentsField({
   uploadKind,
   error,
   readOnly = false,
+  preferredKinds = [],
   emptyText = 'Sin justificantes. El mérito se puede guardar, pero no se podrá incluir en una solicitud hasta que tenga al menos uno.',
 }: {
   value: string[];
@@ -40,6 +41,8 @@ export function MeritDocumentsField({
   error?: string;
   /** Solo muestra la lista, sin poder cambiarla. */
   readOnly?: boolean;
+  /** Tipos de documento que se proponen primero al añadir uno ya subido. */
+  preferredKinds?: readonly DocumentKind[];
   emptyText?: string;
 }) {
   const { data: documents = [] } = useDocuments();
@@ -48,8 +51,10 @@ export function MeritDocumentsField({
   const byId = new Map(documents.map((document) => [document.id, document]));
   const full = value.length >= MAX_MERIT_DOCUMENTS;
 
+  const preferred = (document: DocumentDto) => Number(preferredKinds.includes(document.kind));
   const options = documents
     .filter((document) => !value.includes(document.id))
+    .sort((a, b) => preferred(b) - preferred(a))
     .map((document) => ({
       value: document.id,
       label: `${document.name} (${DOCUMENT_KIND_LABELS[document.kind]})`,

@@ -33,6 +33,7 @@ import { Controller, useFieldArray, useForm } from 'react-hook-form';
 import { applyServerErrors } from '../api/validation';
 import { documentFileUrl, useDocuments, useUploadDocuments } from '../documents/api';
 import { notifyUploadResults } from '../documents/uploadNotifications';
+import { HiringDataForm } from '../hiring/HiringDataForm';
 import { PreviewDrawer } from '../previews/PreviewDrawer';
 import { useProfile, useUpdateProfile } from './api';
 
@@ -55,7 +56,17 @@ export function ProfilePage() {
       </Alert>
     );
   }
-  return <ProfileForm profile={profile} />;
+  return (
+    <Stack>
+      <ProfileForm profile={profile} />
+      <Section
+        title="Datos para la contratación (segunda fase)"
+        description="Solo hacen falta si resultas seleccionado/a: IBAN de la cuenta para la nómina, número de la Seguridad Social y los demás datos del contrato. Se guardan aparte del resto del perfil."
+      >
+        <HiringDataForm />
+      </Section>
+    </Stack>
+  );
 }
 
 /** Valores del formulario: cadenas vacías en lugar de `null` para los campos de texto. */

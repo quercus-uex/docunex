@@ -1,4 +1,4 @@
-import type { ProfileData, ProfileDto } from '@docunex/shared';
+import type { HiringData, HiringDataDto, ProfileData, ProfileDto } from '@docunex/shared';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
@@ -53,6 +53,27 @@ export class ProfileService {
     });
     return this.get(userId);
   }
+
+  /** Datos para la contratación (segunda fase). */
+  async getHiringData(userId: string): Promise<HiringDataDto> {
+    return toHiringDataDto(await this.profiles.findOneBy({ userId }));
+  }
+
+  /** Sustituye los datos de la contratación; el resto del perfil no cambia. */
+  async updateHiringData(userId: string, input: HiringData): Promise<HiringDataDto> {
+    const profile = (await this.profiles.findOneBy({ userId })) ?? this.profiles.create({ userId });
+    return toHiringDataDto(await this.profiles.save(Object.assign(profile, input)));
+  }
+}
+
+function toHiringDataDto(profile: Profile | null): HiringDataDto {
+  return {
+    iban: profile?.iban ?? null,
+    socialSecurityNumber: profile?.socialSecurityNumber ?? null,
+    nationality: profile?.nationality ?? null,
+    birthPlace: profile?.birthPlace ?? null,
+    updatedAt: profile?.updatedAt.toISOString() ?? null,
+  };
 }
 
 function toProfileDto(profile: Profile | null, verifications: DegreeVerification[]): ProfileDto {

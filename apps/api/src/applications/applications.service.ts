@@ -4,6 +4,7 @@ import {
   defaultExpone,
   defaultSolicita,
   isApplicationLocked,
+  type HiringSummaryDto,
   type PackageSummaryDto,
   type registryEntryInputSchema,
   type updateApplicationSchema,
@@ -20,6 +21,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import type { z } from 'zod';
 import { Document } from '../documents/document.entity.js';
+import { HiringService } from '../hiring/hiring.service.js';
 import { PackagesService } from '../generation/packages.service.js';
 import { toValidationInput } from '../generation/snapshot.js';
 import { SnapshotService } from '../generation/snapshot.service.js';
@@ -54,23 +56,30 @@ export class ApplicationsService {
     private readonly positions: PositionsService,
     private readonly snapshots: SnapshotService,
     private readonly packages: PackagesService,
+    private readonly hiring: HiringService,
   ) {}
 
   async list(userId: string): Promise<ApplicationDto[]> {
     const applications = await this.query(userId)
       .orderBy('application.createdAt', 'DESC')
       .getMany();
-    const latest = await this.packages.latest(applications.map((application) => application.id));
+    const [latest, hiring] = await Promise.all([
+      this.packages.latest(applications.map((application) => application.id)),
+      this.hiring.summaries(userId, applications),
+    ]);
     return applications.map((application) =>
-      toApplicationDto(application, latest.get(application.id)),
+      toApplicationDto(application, latest.get(application.id), hiring.get(application.id)),
     );
   }
 
   async get(userId: string, id: string): Promise<ApplicationDto> {
     const application = await this.query(userId).andWhere('application.id = :id', { id }).getOne();
     if (!application) throw new NotFoundException('Solicitud no encontrada');
-    const latest = await this.packages.latest([id]);
-    return toApplicationDto(application, latest.get(id));
+    const [latest, hiring] = await Promise.all([
+      this.packages.latest([id]),
+      this.hiring.summaries(userId, [application]),
+    ]);
+    return toApplicationDto(application, latest.get(id), hiring.get(id));
   }
 
   /**
@@ -275,6 +284,7 @@ function byPosition<T extends { position: number }>(links: T[] | undefined): T[]
 function toApplicationDto(
   application: Application,
   latestPackage: PackageSummaryDto | undefined,
+  hiring: HiringSummaryDto | undefined,
 ): ApplicationDto {
   const position = application.position!;
   return {
@@ -306,6 +316,7 @@ function toApplicationDto(
         packageVersion: entry.package!.version,
         createdAt: entry.createdAt.toISOString(),
       })),
+    hiring: hiring ?? null,
     createdAt: application.createdAt.toISOString(),
     updatedAt: application.updatedAt.toISOString(),
   };

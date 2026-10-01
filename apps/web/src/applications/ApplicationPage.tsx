@@ -14,6 +14,7 @@ import {
   Title,
   useMatches,
 } from '@mantine/core';
+import { useMediaQuery } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { IconArrowLeft, IconLock, IconTrash } from '@tabler/icons-react';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { useApplication, useDeleteApplication } from './api';
 import { ApplicationStatusBadge } from './ApplicationStatusBadge';
 import { GenerateStep } from './steps/GenerateStep';
+import { HiringStep } from './steps/HiringStep';
 import { MeritsStep } from './steps/MeritsStep';
 import { PositionStep } from './steps/PositionStep';
 import { RegistryStep } from './steps/RegistryStep';
@@ -29,12 +31,16 @@ import { ValidationStep } from './steps/ValidationStep';
 
 const GENERATE_STEP = 4;
 const REGISTRY_STEP = 5;
+const HIRING_STEP = 6;
+
+type InitialStep = 'registry' | 'hiring';
 
 /**
- * Asistente de una solicitud (`/solicitudes/:id`), pasos ①–⑥ del plan. Con `registry` se abre en la
- * guía de registro (`/solicitudes/:id/registro`).
+ * Asistente de una solicitud (`/solicitudes/:id`), pasos ①–⑥ del plan y ⑦, la segunda fase
+ * (contratación). Con `open` se abre en la guía de registro (`/solicitudes/:id/registro`) o en la
+ * segunda fase (`/solicitudes/:id/contratacion`).
  */
-export function ApplicationPage({ registry = false }: { registry?: boolean }) {
+export function ApplicationPage({ open }: { open?: InitialStep }) {
   const { id = '' } = useParams();
   const { data: application, isPending, error } = useApplication(id);
 
@@ -55,7 +61,7 @@ export function ApplicationPage({ registry = false }: { registry?: boolean }) {
       </Stack>
     );
   }
-  return <Wizard application={application} registry={registry} />;
+  return <Wizard application={application} open={open} />;
 }
 
 function BackLink() {
@@ -69,23 +75,25 @@ function BackLink() {
   );
 }
 
-function initialStep(application: ApplicationDto, registry: boolean): number {
-  if (registry || isApplicationLocked(application.status)) return REGISTRY_STEP;
+function initialStep(application: ApplicationDto, open: InitialStep | undefined): number {
+  if (open === 'hiring') return HIRING_STEP;
+  if (open === 'registry' || isApplicationLocked(application.status)) return REGISTRY_STEP;
   // Si ya hay un expediente, se abre en la generación.
   return application.latestPackage ? GENERATE_STEP : 0;
 }
 
-function Wizard({ application, registry }: { application: ApplicationDto; registry: boolean }) {
-  const [step, setStep] = useState(() => initialStep(application, registry));
+function Wizard({ application, open }: { application: ApplicationDto; open?: InitialStep }) {
+  const [step, setStep] = useState(() => initialStep(application, open));
   const [deleting, setDeleting] = useState(false);
   const locked = isApplicationLocked(application.status);
-  const next = () => setStep((s) => Math.min(REGISTRY_STEP, s + 1));
+  const next = () => setStep((s) => Math.min(HIRING_STEP, s + 1));
   const back = () => setStep((s) => Math.max(0, s - 1));
   const props = { application, locked, onNext: next, onBack: back };
-  // Los seis pasos en horizontal no caben en pantallas estrechas: ahí se apilan en vertical, y en
-  // las intermedias se compactan un poco para que quepan en una sola fila.
-  const orientation = useMatches<'horizontal' | 'vertical'>({ base: 'vertical', lg: 'horizontal' });
-  const stepperSize = useMatches<MantineSize>({ base: 'md', lg: 'sm', xl: 'md' });
+  // Los siete pasos en horizontal solo caben en una fila en pantallas anchas: por debajo se apilan
+  // en vertical, y en las intermedias se compactan un poco.
+  const orientation = useMatches<'horizontal' | 'vertical'>({ base: 'vertical', xl: 'horizontal' });
+  const wide = useMediaQuery('(min-width: 96em)');
+  const stepperSize: MantineSize = orientation === 'horizontal' && !wide ? 'sm' : 'md';
 
   return (
     <Stack>
@@ -110,6 +118,8 @@ function Wizard({ application, registry }: { application: ApplicationDto; regist
           Solicitud {application.status === 'closed' ? 'cerrada' : 'registrada'} con el nº{' '}
           {application.registryEntries[0]?.number}: se puede consultar, pero ya no se modifica. El
           expediente presentado queda guardado tal cual.
+          {application.status === 'registered' &&
+            ' La documentación de la segunda fase (contratación) sí se puede preparar en el último paso.'}
         </Alert>
       )}
 
@@ -137,6 +147,16 @@ function Wizard({ application, registry }: { application: ApplicationDto; regist
         </Stepper.Step>
         <Stepper.Step label="Registro" description="RedSara">
           <RegistryStep {...props} />
+        </Stepper.Step>
+        <Stepper.Step
+          label="Contratación"
+          description={
+            application.hiring
+              ? `Fase 2 · ${application.hiring.requiredDone}/${application.hiring.requiredTotal}`
+              : 'Fase 2'
+          }
+        >
+          <HiringStep {...props} />
         </Stepper.Step>
       </Stepper>
       <DeleteApplicationModal

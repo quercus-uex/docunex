@@ -12,8 +12,10 @@ import {
   EXAMPLE_ANNEX,
   EXAMPLE_CV_FULL,
   EXAMPLE_CV_SPARSE,
+  EXAMPLE_HIRING,
   EXAMPLE_INDEX,
   EXAMPLE_SEPARATORS,
+  HiringSheet,
   IndexSheet,
   Separator,
 } from '../src/index.js';
@@ -25,6 +27,7 @@ const documents: Record<string, () => ReactElement> = {
   'cv-completo.pdf': () => <CvDocument model={EXAMPLE_CV_FULL} />,
   'cv-con-huecos.pdf': () => <CvDocument model={EXAMPLE_CV_SPARSE} />,
   'hoja-indice.pdf': () => <IndexSheet model={EXAMPLE_INDEX} />,
+  'fase-2-contratacion.pdf': () => <HiringSheet model={EXAMPLE_HIRING} />,
   ...Object.fromEntries(
     EXAMPLE_SEPARATORS.map((model) => [
       `separador-${model.number}.pdf`,

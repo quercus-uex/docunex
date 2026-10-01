@@ -27,6 +27,17 @@ Investigador (PCI) de la Universidad de Extremadura.
      las imágenes de los documentos más pesados.
   6. Guía para presentarlo en el registro electrónico (rec.redsara.es), con los datos listos para
      copiar, y anotación del número de registro. Una vez registrada, la solicitud queda bloqueada.
+- **Segunda fase (contratación):** si la candidatura resulta seleccionada, un séptimo paso en la
+  solicitud registrada reúne lo necesario para formalizar el contrato:
+  - Datos para el contrato, guardados en el perfil y reutilizables: IBAN (con sus dígitos de
+    control), número de afiliación a la Seguridad Social (NUSS, con sus dígitos de control),
+    nacionalidad y lugar de nacimiento.
+  - Lista de comprobación de documentos (DNI, certificado de titularidad bancaria, afiliación a la
+    Seguridad Social, título, declaraciones, modelo 145…) vinculados a los documentos ya subidos, con
+    su estado. La lista es orientativa y se configura en `packages/shared/src/hiring.ts`
+    (`HIRING_DOCUMENTS`).
+  - Descarga de un PDF con una portada (datos y relación de documentos con su página) y los
+    documentos detrás.
 
 ## Requisitos
 
